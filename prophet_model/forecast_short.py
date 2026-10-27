@@ -56,7 +56,7 @@ pd.DataFrame({"Показатель": ["MAE (средняя абсолютная
                              "Coverage (доля значений в доверительном интервале), %",
                              "MAE наивного прогноза (как сегодня), см"],
               "Значение": [mae, rmse, mape, coverage, mae_naive]}).round(1).to_csv(
-    os.path.join(OUT, "metrics.csv"), index=False, sep=";", encoding="utf-8-sig")
+    os.path.join(OUT, "metrics.csv"), index=False, sep=";", decimal=",", encoding="utf-8-sig")
 
 # сравнение факта и прогноза
 plt.figure(figsize=(11, 4))
@@ -114,5 +114,5 @@ plt.show()
 # таблица
 out = fut[["ds", "yhat", "yhat_lower", "yhat_upper"]].copy()
 out[["yhat", "yhat_lower", "yhat_upper"]] = out[["yhat", "yhat_lower", "yhat_upper"]].round(1)
-out.to_csv(os.path.join(OUT, "prognoz.csv"), index=False, sep=";", encoding="utf-8-sig")
+out.to_csv(os.path.join(OUT, "prognoz.csv"), index=False, sep=";", decimal=",", encoding="utf-8-sig")
 print(f"Результаты сохранены в папку: {OUT}")
