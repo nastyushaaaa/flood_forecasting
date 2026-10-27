@@ -19,16 +19,16 @@ BASE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(BASE, OUTPUT_DIR)
 os.makedirs(OUT, exist_ok=True)
 
-# данные
+# переименование колонок для данных
 # для Prophet нужно 2 колонки: ds (дата) и y (значение)
 df = pd.read_csv(os.path.join(BASE, FILE), parse_dates=[DATE_COL])
 d = df.rename(columns={DATE_COL: "ds", VALUE_COL: "y"})[["ds", "y"]].dropna()
-print(f"Данные: {d['ds'].min().date()} … {d['ds'].max().date()}, строк: {len(d)}")
+print(f"Данные: {d['ds'].min().date()} … {d['ds'].max().date()}, строк: {len(d)}") #период данных
 
 # проверка модели на последнем году
 # обучение модели на всём, кроме последнего года, и сравниваем прогноз с тем, что было на самом деле
-cut = d["ds"].max() - pd.Timedelta(days=TEST_DAYS)
-train, test = d[d["ds"] <= cut], d[d["ds"] > cut]
+cut = d["ds"].max() - pd.Timedelta(days=TEST_DAYS) #день, разделяющий график №1
+train, test = d[d["ds"] <= cut], d[d["ds"] > cut] #делим данные на 2 части
 
 m_test = Prophet(yearly_seasonality=True, weekly_seasonality=False, daily_seasonality=False)
 m_test.fit(train)
@@ -36,7 +36,7 @@ pred = m_test.predict(test[["ds"]])
 
 y = test["y"].values
 p = pred["yhat"].values
-err = y - p
+err = y - p #ошибка прогноза
 
 mae = np.mean(np.abs(err))  # средняя абсолютная ошибка, см
 rmse = np.sqrt(np.mean(err ** 2))  # среднеквадратичная ошибка, см
@@ -58,6 +58,7 @@ pd.DataFrame({"Показатель": ["MAE (средняя абсолютная
               "Значение": [mae, rmse, mape, coverage, mae_naive]}).round(1).to_csv(
     os.path.join(OUT, "metrics.csv"), index=False, sep=";", encoding="utf-8-sig")
 
+# сравнение факта и прогноза
 plt.figure(figsize=(11, 4))
 plt.plot(train["ds"].tail(TEST_DAYS), train["y"].tail(TEST_DAYS), color="gray", lw=0.8, label="обучающая часть")
 plt.plot(test["ds"], test["y"], "k", label="факт")
@@ -70,18 +71,20 @@ plt.tight_layout()
 plt.savefig(os.path.join(OUT, "1_proverka.png"), dpi=150)
 plt.show()
 
-# прогноз на будущее
+# новая модель для прогноза на будущее
 # обучение происходит на всех данных
 m = Prophet(yearly_seasonality=True, weekly_seasonality=False, daily_seasonality=False)
 m.fit(d)
 future = m.make_future_dataframe(periods=HORIZON) # добавляет в таблицу будущие даты
 fc = m.predict(future) # yhat — прогноз, yhat_lower/upper — интервал
 
+# ищем пик и сравниваем с верхней границей интервала
 fut = fc[fc["ds"] > d["ds"].max()]
 peak = fut.loc[fut["yhat"].idxmax()]
 print(f"Ожидаемый пик: {peak['ds'].date()}, {peak['yhat']:.0f} см")
 print("Верхняя граница достигает критической отметки:", "да" if (fut["yhat_upper"] >= CRITICAL).any() else "нет")
 
+# график прогноза
 plt.figure(figsize=(11, 4))
 last = d[d["ds"] >= d["ds"].max() - pd.Timedelta(days=3 * 365)]
 plt.plot(last["ds"], last["y"], "k", lw=0.8, label="факт")
@@ -95,11 +98,8 @@ plt.tight_layout()
 plt.savefig(os.path.join(OUT, "2_prognoz.png"), dpi=150)
 plt.show()
 
-m.plot_components(fc) # тренд и годовая сезонность
-plt.savefig(os.path.join(OUT, "3_komponenty.png"), dpi=150)
-plt.show()
-
-fig = m.plot_components(fc) # тренд и годовая сезонность
+# тренд и годовая сезонность
+fig = m.plot_components(fc)
 ax_trend, ax_year = fig.axes[0], fig.axes[1]
 ax_trend.set_title("Многолетний тренд")
 ax_trend.set_xlabel("Год")
