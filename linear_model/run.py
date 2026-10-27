@@ -1,4 +1,3 @@
-# linear_model/run.py
 import sys
 from pathlib import Path
 import pandas as pd

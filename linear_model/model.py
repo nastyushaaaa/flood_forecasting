@@ -1,10 +1,9 @@
-# linear_model/model.py
 import numpy as np
 import pandas as pd
-from sklearn.impute import SimpleImputer
-from sklearn.linear_model import Ridge
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
+from sklearn.impute import SimpleImputer # медиана вместо пропуска
+from sklearn.linear_model import Ridge # линейная регрессия (без переобучения)
+from sklearn.pipeline import Pipeline # конвейер - объединение шагов
+from sklearn.preprocessing import StandardScaler # нормализация
 
 
 class LinearFloodModel:
@@ -19,38 +18,39 @@ class LinearFloodModel:
         
         self.models = []
         self.feature_cols = None
-        self.err_q10 = None
+        self.err_q10 = None #перцентили
         self.err_q90 = None
 
     def _prepare_df(self, clean):
         df = clean.copy()
         if 'date' in df.columns:
             df = df.set_index('date')
-        return df.sort_index()
+        return df.sort_index() # сортируем по дате
 
+    # подготовка признаков
     def _build_features(self, df):
-        # Берем все числовые колонки, кроме служебных флагов заполнения
+        # все числовые колонки, кроме _filled
         num_cols = [c for c in df.select_dtypes(include='number').columns if not c.endswith('_filled')]
         X = pd.DataFrame(index=df.index)
         
-        # Лаги (все признаки сдвигаем в прошлое)
+        # заполняем пустую таблицу со сдвигом на lag
         for c in num_cols:
             for lag in range(1, self.lags + 1):
                 X[f'{c}_lag{lag}'] = df[c].shift(lag)
                 
-        # Сезонность (день года)
+        # считаем сезоны по дням
         doy = df.index.dayofyear
         X['sin_doy'] = np.sin(2 * np.pi * doy / 365.25)
         X['cos_doy'] = np.cos(2 * np.pi * doy / 365.25)
         
-        return X.dropna(axis=1, how='all')
+        return X.dropna(axis=1, how='all') # возвращаем таблицу без полностью пустых столбцов
 
     def fit(self, clean):
         df = self._prepare_df(clean)
         X = self._build_features(df)
         self.feature_cols = X.columns.tolist()
 
-        # Исключаем дни, где целевой уровень был восстановлен (filled == 1)
+        # только дни с реальными данными
         if self.drop_filled and f'{self.target_col}_filled' in df.columns:
             valid_start = df[f'{self.target_col}_filled'].eq(0)
         else:
@@ -58,13 +58,13 @@ class LinearFloodModel:
 
         self.models, residuals = [], []
         
-        # Обучаем отдельную модель для каждого дня прогноза (1..14)
+        # обучение
         for h in range(1, self.horizon + 1):
-            y = df[self.target_col].shift(-h) - df[self.target_col] # Приращение уровня
-            mask = y.notna() & X.notna().all(axis=1) & valid_start
+            y = df[self.target_col].shift(-h) - df[self.target_col] # приращение уровня со сдвигом вверх по таблице
+            mask = y.notna() & X.notna().all(axis=1) & valid_start # фильтр на строки
             
             if self.drop_filled and f'{self.target_col}_filled' in df.columns:
-                mask &= df[f'{self.target_col}_filled'].shift(-h).fillna(1).eq(0)
+                mask &= df[f'{self.target_col}_filled'].shift(-h).fillna(1).eq(0) # прогноз на реальный день
                 
             X_tr, y_tr = X[mask], y[mask]
             if len(X_tr) < 50:
@@ -75,33 +75,34 @@ class LinearFloodModel:
                 ('scaler', StandardScaler()),
                 ('ridge', Ridge(alpha=self.alpha)),
             ])
-            pipe.fit(X_tr, y_tr)
+            pipe.fit(X_tr, y_tr) # запуск обучения
             self.models.append(pipe)
-            residuals.append(y_tr - pipe.predict(X_tr))
+            residuals.append(y_tr - pipe.predict(X_tr)) # считаем ошибку модели
 
-        # Считаем интервалы (10% и 90% перцентили ошибок)
+        # работа с ошибками
         self.err_q10 = np.array([np.percentile(r, 10) for r in residuals])
         self.err_q90 = np.array([np.percentile(r, 90) for r in residuals])
         return self
 
+    # прогноз
     def forecast(self, clean, date=None, X=None):
         """Возвращает DataFrame с прогнозом (date, horizon, level, level_low, level_high)."""
         df = self._prepare_df(clean)
         if X is None:
             X = self._build_features(df)
             
-        t = len(df) - 1 if date is None else df.index.get_loc(pd.Timestamp(date))
+        t = len(df) - 1 if date is None else df.index.get_loc(pd.Timestamp(date)) # индекс сегодня/последего дня
         x_t = X.iloc[[t]].reindex(columns=self.feature_cols)
         
         if x_t.isna().all(axis=1).any():
             raise ValueError('Недостаточно истории для признаков на эту дату')
 
-        # Предсказываем приращения на все 14 дней
-        d = np.array([m.predict(x_t)[0] for m in self.models])
-        h0 = df[self.target_col].iloc[t]
+        # прогон по 14-ти моделям
+        d = np.array([m.predict(x_t)[0] for m in self.models]) # дельта
+        h0 = df[self.target_col].iloc[t] # текущий уровень воды
         
         levels = h0 + d
-        low, high = levels + self.err_q10, levels + self.err_q90
+        low, high = levels + self.err_q10, levels + self.err_q90 # вилка прогноза
         
         dates = [df.index[t] + pd.Timedelta(days=h) for h in range(1, self.horizon + 1)]
         
