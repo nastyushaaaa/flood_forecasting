@@ -88,11 +88,10 @@ class LinearFloodModel:
     def forecast(self, clean, date=None, X=None):
         """Возвращает DataFrame с прогнозом (date, horizon, level, level_low, level_high)."""
         df = self._prepare_df(clean)
-        if X is None:
-            X = self._build_features(df)
-            
+        features = X if X is not None else self._build_features(df) # параметр X не перезаписываем
+
         t = len(df) - 1 if date is None else df.index.get_loc(pd.Timestamp(date)) # индекс сегодня/последего дня
-        x_t = X.iloc[[t]].reindex(columns=self.feature_cols)
+        x_t = features.iloc[[t]].reindex(columns=self.feature_cols)
         
         if x_t.isna().all(axis=1).any():
             raise ValueError('Недостаточно истории для признаков на эту дату')
