@@ -21,6 +21,40 @@ class LinearFloodModel:
         self.err_q10 = None #перцентили
         self.err_q90 = None
 
+    # доступ к полям только через свойства, даже внутри класса
+    @property
+    def target_col(self):
+        return self._target_col
+
+    @target_col.setter
+    def target_col(self, value):
+        self._target_col = value
+
+    @property
+    def filled_col(self):
+        """Колонка-флаг восстановленных значений целевого ряда (1 — значение заполнено)."""
+        return f'{self.target_col}_filled'
+
+    @property
+    def lags(self):
+        return self._lags
+
+    @lags.setter
+    def lags(self, value):
+        if value < 1:
+            raise ValueError(f'lags должно быть не меньше 1, получено {value}')
+        self._lags = value
+
+    @property
+    def horizon(self):
+        return self._horizon
+
+    @horizon.setter
+    def horizon(self, value):
+        if value < 1:
+            raise ValueError(f'horizon должен быть не меньше 1 сут, получено {value}')
+        self._horizon = value
+
     def _prepare_df(self, clean):
         df = clean.copy()
         if 'date' in df.columns:
@@ -51,8 +85,8 @@ class LinearFloodModel:
         self.feature_cols = X.columns.tolist()
 
         # только дни с реальными данными
-        if self.drop_filled and f'{self.target_col}_filled' in df.columns:
-            valid_start = df[f'{self.target_col}_filled'].eq(0)
+        if self.drop_filled and self.filled_col in df.columns:
+            valid_start = df[self.filled_col].eq(0)
         else:
             valid_start = pd.Series(True, index=df.index)
 
@@ -63,8 +97,8 @@ class LinearFloodModel:
             y = df[self.target_col].shift(-h) - df[self.target_col] # приращение уровня со сдвигом вверх по таблице
             mask = y.notna() & X.notna().all(axis=1) & valid_start # фильтр на строки
             
-            if self.drop_filled and f'{self.target_col}_filled' in df.columns:
-                mask &= df[f'{self.target_col}_filled'].shift(-h).fillna(1).eq(0) # прогноз на реальный день
+            if self.drop_filled and self.filled_col in df.columns:
+                mask &= df[self.filled_col].shift(-h).fillna(1).eq(0) # прогноз на реальный день
                 
             X_tr, y_tr = X[mask], y[mask]
             if len(X_tr) < 50:
