@@ -21,7 +21,7 @@ OUT_DIR = ROOT / 'frontend' / 'mock'
 sys.path.insert(0, str(MODEL_DIR))
 import pg_lstm  # noqa: E402  (модуль модели лежит в amur_pg_lstm)
 
-clean = pd.read_csv(MODEL_DIR / 'data' / 'amur_khabarovsk_clean.csv', parse_dates=['date'], index_col='date')
+clean = pd.read_csv(ROOT / 'data' / 'amur_khabarovsk_clean_2002-2026.csv', parse_dates=['date'], index_col='date')
 today = clean.index[-1]                              # «сегодня» = последняя дата в данных
 
 
