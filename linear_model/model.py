@@ -5,8 +5,10 @@ from sklearn.linear_model import Ridge # линейная регрессия (б
 from sklearn.pipeline import Pipeline # конвейер - объединение шагов
 from sklearn.preprocessing import StandardScaler # нормализация
 
+from flood_model import FloodModel
 
-class LinearFloodModel:
+
+class LinearFloodModel(FloodModel):
     """Линейная baseline-модель (Ridge) на 14 суток."""
 
     def __init__(self, target_col='level_khabarovsk', lags=14, alpha=1.0, horizon=14, drop_filled=True):
