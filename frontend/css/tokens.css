@@ -1,0 +1,102 @@
+/* =====================================================================================
+   ДИЗАЙН-ТОКЕНЫ «Уровень»
+   Источник: дизайн-проект «Стили и палитра» (tokens.json).
+   Все цвета, шрифты, отступы и радиусы сайта берутся ТОЛЬКО отсюда, через var(--имя).
+   В остальных файлах не пишем цвета вида #13212b — иначе темы перестанут работать.
+
+   Как переключается тема (атрибуты на теге <html>, ставит js/main.js из адреса страницы):
+     data-theme="dark"  — тёмная тема «Уровень · СЦ» (ситуационный центр)
+     data-brand="sber"  — фирменные цвета банка (меняются только цвета группы «Бренд»)
+   Пример адреса: index.html?theme=dark   или   index.html?brand=vtb
+   ===================================================================================== */
+
+:root {
+  /* --- Нейтральные ------------------------------------------------------------------- */
+  --bg: #f3f5f7;              /* фон страницы */
+  --surface: #ffffff;         /* фон карточек */
+  --surface-sunken: #e9edf0;  /* боковая панель, подложка карты */
+  --border: #d8dee3;
+  --border-strong: #6f7c87;   /* рамки полей ввода и вторичных кнопок */
+  --ink: #13212b;             /* основной текст */
+  --ink-muted: #4e5d69;       /* подписи, второстепенный текст */
+
+  /* --- Бренд (меняется в темах банков) ------------------------------------------------ */
+  --brand: #0f5468;
+  --brand-accent: #9ed3df;
+  --action: #0f5468;          /* основная кнопка */
+  --action-hover: #0a3e4d;
+  --on-action: #ffffff;       /* текст на основной кнопке */
+  --brand-soft: #e2eef1;      /* выбранный чип, информационная плашка */
+  --link: #0f5468;
+  --focus: #1a6f8a;           /* рамка фокуса с клавиатуры */
+
+  /* --- Статусы поста: основной цвет / мягкий фон / цвет текста на мягком фоне ---------- */
+  --status-normal: #2f8f5f;  --status-normal-soft: #e5f3eb;  --status-normal-ink: #1f6b45;
+  --status-watch: #e8b90c;   --status-watch-soft: #fdf3d0;   --status-watch-ink: #6b5200;
+  --status-flood: #e0661a;   --status-flood-soft: #fde8d8;   --status-flood-ink: #8a3a00;
+  --status-danger: #c4202f;  --status-danger-soft: #fbe2e4;  --status-danger-ink: #9e1824;
+  --status-nodata: #8b97a1;  --status-nodata-soft: #eceff2;  --status-nodata-ink: #4e5d69;
+
+  /* --- Графики ------------------------------------------------------------------------ */
+  --chart-fact: #24323c;           /* фактический уровень — сплошная линия */
+  --chart-forecast: #1a6f8a;       /* прогноз — пунктир */
+  --chart-band: #cfe5eb;           /* коридор неопределённости прогноза */
+  --chart-seasonal: #9a6a1f;       /* сезонный прогноз */
+  --chart-seasonal-band: #f3e6cf;
+  --chart-grid: #e6eaed;
+
+  /* --- Типографика -------------------------------------------------------------------- */
+  --font-text: 'Golos Text', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;   /* для чисел: цифры одной ширины */
+
+  /* --- Отступы ------------------------------------------------------------------------ */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-7: 48px;
+
+  /* --- Радиусы ------------------------------------------------------------------------ */
+  --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-pill: 999px;
+}
+
+/* ===== Тёмная тема «Уровень · СЦ» ===================================================== */
+:root[data-theme="dark"] {
+  --bg: #0c1317; --surface: #131c22; --surface-sunken: #0a1013;
+  --border: #24313a; --border-strong: #6a7a86; --ink: #e6ecf0; --ink-muted: #9aa8b3;
+
+  --brand: #5fb3c7; --brand-accent: #1e4f5c; --action: #5fb3c7; --action-hover: #82c6d6;
+  --on-action: #062129; --brand-soft: #13323b; --link: #7fd0e2; --focus: #7fd0e2;
+
+  --status-normal: #48b07d;  --status-normal-soft: #12291f;  --status-normal-ink: #8fd9b1;
+  --status-watch: #f2c833;   --status-watch-soft: #2e2709;   --status-watch-ink: #f5d873;
+  --status-flood: #f08a3e;   --status-flood-soft: #33200f;   --status-flood-ink: #f7b07a;
+  --status-danger: #f0555f;  --status-danger-soft: #3a1418;  --status-danger-ink: #f79aa0;
+  --status-nodata: #6e7c87;  --status-nodata-soft: #1c252b;  --status-nodata-ink: #a9b5be;
+
+  --chart-fact: #c9d3da; --chart-forecast: #6cc2d6; --chart-band: #1c3c46;
+  --chart-seasonal: #d6a85a; --chart-seasonal-band: #3a2e1a; --chart-grid: #1d272e;
+}
+
+/* ===== Темы банков: меняется только группа «Бренд», остальное как в светлой ============= */
+:root[data-brand="sber"] {
+  --brand: #21a038; --brand-accent: #a0e6b2; --action: #1b7a33; --action-hover: #146128;
+  --brand-soft: #e4f4e8; --link: #1b7a33; --focus: #1b7a33;
+}
+:root[data-brand="alfa"] {
+  --brand: #ef3124; --brand-accent: #ffd5d1; --action: #d32d1f; --action-hover: #b0241a;
+  --brand-soft: #fde6e4; --link: #c4291c; --focus: #c4291c;
+}
+:root[data-brand="vtb"] {
+  --brand: #002882; --brand-accent: #7fcfef; --action: #002882; --action-hover: #001c5e;
+  --brand-soft: #e3e9f6; --link: #002882; --focus: #2a57c9;
+}
+:root[data-brand="gpb"] {   /* Газпромбанк */
+  --brand: #0a3d8f; --brand-accent: #9fb7e0; --action: #0a3d8f; --action-hover: #072d6b;
+  --brand-soft: #e4eaf5; --link: #0a3d8f; --focus: #2a57c9;
+}
+:root[data-brand="rshb"] {  /* Россельхозбанк */
+  --brand: #2b6030; --brand-accent: #ffcb05; --action: #2b6030; --action-hover: #1f4823;
+  --brand-soft: #e7f1e3; --link: #2b6030; --focus: #238441;
+}
+:root[data-brand="sovcom"] {
+  --brand: #003791; --brand-accent: #ff9aa3; --action: #003791; --action-hover: #002a70;
+  --brand-soft: #e3eaf6; --link: #003791; --focus: #2a57c9;
+}
