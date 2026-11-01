@@ -82,7 +82,7 @@ NSE сравнивает модель со средним уровнем. Для
 Из корня репозитория:
 
 ```bash
-python -m pip install -r requirements-models.txt
+python -m pip install -r requirements.txt
 python evaluate_skill.py
 python -m unittest discover -p "test_*.py"
 ```
