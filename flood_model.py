@@ -11,6 +11,13 @@ import pandas as pd
 class FloodModel(ABC):
     """Модель, которая обучается на истории и прогнозирует уровень на `horizon` суток вперёд."""
 
+    def _prepare_df(self, clean: pd.DataFrame) -> pd.DataFrame:
+        """Копия ряда с датой в индексе, отсортированная по дате. Общая для всех моделей."""
+        df = clean.copy()
+        if 'date' in df.columns:
+            df = df.set_index('date')
+        return df.sort_index()
+
     @abstractmethod
     def fit(self, clean: pd.DataFrame) -> 'FloodModel':
         """Обучает модель.

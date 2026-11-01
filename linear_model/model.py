@@ -57,12 +57,6 @@ class LinearFloodModel(FloodModel):
             raise ValueError(f'horizon должен быть не меньше 1 сут, получено {value}')
         self._horizon = value
 
-    def _prepare_df(self, clean):
-        df = clean.copy()
-        if 'date' in df.columns:
-            df = df.set_index('date')
-        return df.sort_index() # сортируем по дате
-
     # подготовка признаков
     def _build_features(self, df):
         # все числовые колонки, кроме _filled
