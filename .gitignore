@@ -10,4 +10,10 @@ venv/
 
 .DS_Store
 .vscode/
+
+results/
 .idea/
+
+# результаты сравнения моделей нужны для отчёта (STYLEGUIDE п. 1.5), кроме большого файла прогнозов
+!model_comparison/results/
+model_comparison/results/predictions.csv

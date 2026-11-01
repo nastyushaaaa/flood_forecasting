@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_absolute_error
 
-data = pd.read_csv("amur_khabarovsk_clean_2002-2026.csv", parse_dates=["date"])
+data = pd.read_csv("../data/amur_khabarovsk_clean_2002-2026.csv", parse_dates=["date"])
 data = data.set_index("date")
 print(data.shape)
 print(data.isna().sum().sum())
