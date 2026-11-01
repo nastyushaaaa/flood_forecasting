@@ -93,7 +93,7 @@ async function loadAll() {
     renderStations(true);
     await selectStation(state.selectedId, false);
   } catch (error) {
-    console.error(error);
+    console.error('Не удалось загрузить список постов:', error);
     document.getElementById('snapshot-info').textContent = `Не удалось загрузить данные: ${error.message}`;
   } finally {
     button.disabled = false;
@@ -259,38 +259,30 @@ async function selectStation(id, scrollToForecast) {
     `Прогноз уровня воды · ${station.name}, р. ${station.river}`;
   if (scrollToForecast) document.getElementById('forecast-card').scrollIntoView({ behavior: 'smooth' });
 
-  let forecast, seasonal;
-  try {
-    [forecast, seasonal] = await Promise.all([getForecast(id), getSeasonal(id)]);
-  } catch (error) {
-    console.error(error);
-    if (state.selectedId === id) showForecastError(station, error);
-    return;
-  }
+  // Прогнозы независимы: если один не загрузился, второй всё равно показываем
+  const [forecastResult, seasonalResult] = await Promise.allSettled([getForecast(id), getSeasonal(id)]);
   // Пока ждали ответ, пользователь мог выбрать другой пост — тогда этот ответ уже не нужен
   if (state.selectedId !== id) return;
 
-  state.forecast = forecast;
-  state.seasonal = seasonal;
-  renderForecast(station, forecast);
-  renderSeasonal(station, seasonal);
-  renderRisk(station, forecast);
+  state.forecast = forecastResult.status === 'fulfilled' ? forecastResult.value : null;
+  state.seasonal = seasonalResult.status === 'fulfilled' ? seasonalResult.value : null;
+  if (forecastResult.status === 'fulfilled') renderForecast(station, state.forecast);
+  else showForecastError(station, 'forecast', forecastResult.reason);
+  if (seasonalResult.status === 'fulfilled') renderSeasonal(station, state.seasonal);
+  else showForecastError(station, 'seasonal', seasonalResult.reason);
+  renderRisk(station, state.forecast);
   updateBusiness();
 }
 
-// Прогноз не загрузился: вместо графиков — сообщение об ошибке, данные прошлого поста убираем
-function showForecastError(station, error) {
-  state.forecast = null;
-  state.seasonal = null;
-  document.getElementById('forecast-sub').textContent = '';
-  document.getElementById('forecast-kpis').innerHTML = '';
-  document.getElementById('seasonal-sub').textContent = '';
-  document.getElementById('seasonal-note').hidden = true;
-  const text = `Не удалось загрузить прогноз для поста «${station.name}»: ${error.message}`;
-  showChartMessage('forecast-chart', text);
-  showChartMessage('seasonal-chart', text);
-  renderRisk(station, null);
-  updateBusiness();
+// Прогноз не загрузился: вместо графика — сообщение об ошибке, подписи прошлого поста убираем.
+// kind — 'forecast' (краткосрочный) или 'seasonal' (сезонный)
+function showForecastError(station, kind, error) {
+  const label = kind === 'forecast' ? 'краткосрочный' : 'сезонный';
+  console.error(`Не загружен ${label} прогноз для поста ${station.id}:`, error);
+  document.getElementById(`${kind}-sub`).textContent = '';
+  if (kind === 'forecast') document.getElementById('forecast-kpis').innerHTML = '';
+  else document.getElementById('seasonal-note').hidden = true;
+  showChartMessage(`${kind}-chart`, `Не удалось загрузить ${label} прогноз для поста «${station.name}»: ${error.message}`);
 }
 
 // Бизнес-выводы (js/business.js) по выбранной территории и прогнозу выбранного поста
