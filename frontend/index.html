@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Уровень · мониторинг паводков</title>
+
+  <!-- Шрифты из дизайн-проекта -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+  <!-- Стили библиотеки карты Leaflet (локальная копия, см. vendor/) -->
+  <link rel="stylesheet" href="vendor/leaflet.min.css">
+  <!-- Наши стили: сначала токены (цвета, шрифты), потом компоненты -->
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<!--
+  Страница = статичный «каркас» с пустыми контейнерами (id="...").
+  Содержимое контейнеров рисует JavaScript (js/main.js) после загрузки данных.
+-->
+<div class="layout">
+
+  <!-- ===== Боковая панель: логотип и фильтры ===== -->
+  <aside class="sidebar">
+    <div class="logo">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
+        <rect width="28" height="28" rx="8" fill="var(--brand)"/>
+        <path d="M5 11h18" stroke="var(--brand-accent)" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M5 17c3-3 6 3 9 0s6 3 9 0" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <div class="body-strong">Уровень</div>
+        <div class="caption muted">мониторинг паводков</div>
+      </div>
+    </div>
+
+    <label class="u-field">
+      <span class="overline muted">Дата и время проверки</span>
+      <input type="datetime-local" id="filter-date" class="u-input">
+    </label>
+
+    <fieldset class="u-field">
+      <legend class="overline muted">Федеральный округ</legend>
+      <div class="u-chips" id="filter-okrug"></div>  <!-- чипы округов создаёт main.js -->
+    </fieldset>
+
+    <fieldset class="u-field">
+      <legend class="overline muted">Река</legend>
+      <div class="u-chips" id="filter-river"></div>  <!-- только реки выбранных округов -->
+    </fieldset>
+
+    <fieldset class="u-field">
+      <legend class="overline muted">Статус</legend>
+      <div class="u-chips u-chips--column" id="filter-status"></div>
+    </fieldset>
+
+    <button type="button" id="btn-refresh" class="u-btn u-btn--primary u-btn--wide">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+        <path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>
+      </svg>
+      Обновить данные
+    </button>
+
+    <p class="caption muted" id="update-info"></p>
+  </aside>
+
+  <!-- ===== Основная часть ===== -->
+  <main class="main">
+
+    <header class="page-header">
+      <div>
+        <p class="overline muted" id="snapshot-info">Загрузка…</p>
+        <h1 class="h1">Мониторинг уровня воды рек</h1>
+        <!-- Показывается, пока сайт работает на тестовых данных (USE_MOCK = true в js/api.js) -->
+        <span class="u-badge u-badge--nodata demo-badge" id="demo-badge" hidden>
+          Демонстрационные данные · бэкенд пока не подключён
+        </span>
+      </div>
+      <div class="page-header__actions">
+        <a href="#business-card" class="u-btn u-btn--secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+            <path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/>
+          </svg>
+          Бизнес-выводы
+        </a>
+        <button type="button" class="u-btn u-btn--secondary js-export">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+            <path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/>
+          </svg>
+          Скачать отчёт (Excel)
+        </button>
+      </div>
+    </header>
+
+    <!-- Красные плашки по постам с опасным уровнем -->
+    <div id="alerts" class="stack"></div>
+
+    <!-- 5 карточек-счётчиков: всего, норма, критический, пойма, опасный -->
+    <section class="kpi-row" id="kpi-row" aria-label="Сводка по статусам"></section>
+
+    <section class="grid-2">
+      <article class="u-card">
+        <h3 class="h3">Карта гидропостов</h3>
+        <p class="caption muted card-sub">Клик по маркеру открывает историю и прогноз поста</p>
+        <div id="map" class="map"></div>
+        <div class="legend caption" id="map-legend"></div>
+      </article>
+
+      <article class="u-card">
+        <h3 class="h3">Распределение по статусам</h3>
+        <p class="caption muted card-sub" id="dist-sub"></p>
+        <div class="u-dist" id="dist-bar"></div>
+        <ul class="dist-list" id="dist-list"></ul>
+        <hr class="divider">
+        <p class="overline muted">Ближайший риск</p>
+        <p class="body-strong" id="risk-text">—</p>
+        <p class="caption muted" id="risk-note"></p>
+      </article>
+    </section>
+
+    <article class="u-card">
+      <div class="card-head">
+        <div>
+          <h2 class="h2">Текущие уровни</h2>
+          <p class="caption muted card-sub">Сортировка по опасности, затем по запасу до порога</p>
+        </div>
+        <button type="button" class="u-btn u-btn--secondary u-btn--sm js-export">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+            <path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/>
+          </svg>
+          Excel
+        </button>
+      </div>
+      <div class="table-wrap">
+        <table class="u-table">
+          <thead>
+            <tr>
+              <th>Пост</th><th>Округ</th><th>Статус</th>
+              <th class="num">Уровень, см</th><th class="num">До опасного, см</th><th>Замер</th>
+            </tr>
+          </thead>
+          <tbody id="stations-body"></tbody>
+        </table>
+      </div>
+    </article>
+
+    <article class="u-card" id="forecast-card">
+      <h2 class="h2" id="forecast-title">Прогноз уровня воды</h2>
+      <p class="caption muted card-sub" id="forecast-sub"></p>
+      <div class="legend caption">
+        <span><svg width="20" height="4" aria-hidden="true"><line x1="0" x2="20" y1="2" y2="2" stroke="var(--chart-fact)" stroke-width="2"/></svg>Факт</span>
+        <span><svg width="20" height="4" aria-hidden="true"><line x1="0" x2="20" y1="2" y2="2" stroke="var(--chart-forecast)" stroke-width="2" stroke-dasharray="6 4"/></svg>Прогноз</span>
+        <span><svg width="16" height="10" aria-hidden="true"><rect width="16" height="10" rx="2" fill="var(--chart-band)"/></svg><span id="forecast-band-label">Коридор</span></span>
+      </div>
+      <div id="forecast-chart" class="chart chart--forecast"></div>
+      <div class="kpi-row kpi-row--3" id="forecast-kpis"></div>
+    </article>
+
+    <article class="u-card" id="seasonal-card">
+      <h2 class="h2">Сезонный прогноз на год вперёд</h2>
+      <p class="caption muted card-sub" id="seasonal-sub"></p>
+      <div class="legend caption">
+        <span><svg width="20" height="4" aria-hidden="true"><line x1="0" x2="20" y1="2" y2="2" stroke="var(--chart-fact)" stroke-width="2"/></svg>Факт</span>
+        <span><svg width="20" height="4" aria-hidden="true"><line x1="0" x2="20" y1="2" y2="2" stroke="var(--chart-seasonal)" stroke-width="2"/></svg>Ожидаемый ход</span>
+        <span><svg width="16" height="10" aria-hidden="true"><rect width="16" height="10" rx="2" fill="var(--chart-seasonal-band)"/></svg>Обычный разброс</span>
+      </div>
+      <div id="seasonal-chart" class="chart chart--seasonal"></div>
+      <div class="u-callout" id="seasonal-note" hidden></div>
+    </article>
+
+    <!-- ===== Бизнес-выводы: что ситуация на реках значит для банка (заполняет js/business.js) =====
+         Каждый раздел раскрывается по клику (<details>). Открыта только сводка. -->
+    <article class="u-card" id="business-card">
+      <div class="card-head">
+        <div>
+          <h2 class="h2">Бизнес-выводы для банка</h2>
+          <p class="caption muted card-sub">По фильтрам слева: <span id="biz-area"></span>. Прогноз по выбранному посту</p>
+        </div>
+        <div id="biz-level"></div>
+      </div>
+
+      <div class="u-accordion">
+        <details open>
+          <summary><span class="body-strong">Сводка для руководства</span><span class="caption muted">уровень риска и главное действие</span></summary>
+          <div class="u-accordion__body" id="biz-summary"></div>
+        </details>
+        <details>
+          <summary><span class="body-strong">Отделения и банкоматы</span><span class="caption muted">операционный риск</span></summary>
+          <div class="u-accordion__body" id="biz-operations"></div>
+        </details>
+        <details>
+          <summary><span class="body-strong">Кредиты и залоги</span><span class="caption muted">кредитный риск</span></summary>
+          <div class="u-accordion__body" id="biz-credit"></div>
+        </details>
+        <details>
+          <summary><span class="body-strong">Оценка возможных потерь</span><span class="caption muted">калькулятор</span></summary>
+          <div class="u-accordion__body">
+            <form id="loss-form" class="biz-form">
+              <label class="u-field">
+                <span class="overline muted">Кредиты под залог в зоне подтопления, млн ₽</span>
+                <input type="number" name="exposure" class="u-input" min="0" step="10" value="1000">
+              </label>
+              <label class="u-field">
+                <span class="overline muted">Ущерб залогу при подтоплении, %</span>
+                <input type="number" name="damage" class="u-input" min="0" max="100" step="1" value="15">
+              </label>
+            </form>
+            <div id="loss-result"></div>
+          </div>
+        </details>
+        <details>
+          <summary><span class="body-strong">Возможности для бизнеса</span><span class="caption muted">продукты и доход</span></summary>
+          <div class="u-accordion__body" id="biz-opportunities"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- ===== Подвал: о проекте, источники данных, контакты. От данных не зависит ===== -->
+    <footer class="page-footer caption muted">
+      <div>
+        <div class="body-strong">Уровень</div>
+        <p>Мониторинг уровней воды на крупных реках России и прогноз паводковой опасности
+           для объектов кредитных организаций.</p>
+      </div>
+      <div>
+        <div class="overline">Источники данных</div>
+        <p>Уровни воды: allrivers.info<br>Погода: Open-Meteo (ERA5), NASA POWER</p>
+      </div>
+      <div>
+        <div class="overline">Модели прогноза</div>
+        <p>Краткосрочный: PG-LSTM, 14 суток<br>Сезонный: Prophet, 365 суток</p>
+      </div>
+      <div>
+        <div class="overline">Проект</div>
+        <p><a href="https://github.com/nastyushaaaa/flood_forecasting" target="_blank" rel="noopener">Репозиторий на GitHub</a><br>
+           Прогноз носит справочный характер</p>
+      </div>
+    </footer>
+
+  </main>
+</div>
+
+<!-- Библиотеки: Leaflet — карта, Plotly — графики (+ русские названия месяцев).
+     Лежат в папке vendor/, а не грузятся из интернета: так сайт открывается быстро и
+     при медленной сети. Версии: Leaflet 1.9.4, Plotly 2.35.2. -->
+<script src="vendor/leaflet.min.js"></script>
+<script src="vendor/plotly.min.js"></script>
+<script src="vendor/plotly-locale-ru.js"></script>
+
+<!-- Наш код. Порядок важен: каждый следующий файл пользуется функциями предыдущих -->
+<script src="js/format.js"></script>   <!-- форматирование чисел и дат -->
+<script src="js/status.js"></script>   <!-- статусы постов: подписи, значки, расчёт -->
+<script src="js/api.js"></script>      <!-- загрузка данных (заглушки или API) -->
+<script src="js/map.js"></script>      <!-- карта -->
+<script src="js/charts.js"></script>   <!-- графики -->
+<script src="js/business.js"></script> <!-- бизнес-выводы и калькулятор потерь -->
+<script src="js/main.js"></script>     <!-- сборка страницы, фильтры, таблица -->
+</body>
+</html>
