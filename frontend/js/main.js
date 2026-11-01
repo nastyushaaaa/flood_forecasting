@@ -259,7 +259,14 @@ async function selectStation(id, scrollToForecast) {
     `Прогноз уровня воды · ${station.name}, р. ${station.river}`;
   if (scrollToForecast) document.getElementById('forecast-card').scrollIntoView({ behavior: 'smooth' });
 
-  const [forecast, seasonal] = await Promise.all([getForecast(id), getSeasonal(id)]);
+  let forecast, seasonal;
+  try {
+    [forecast, seasonal] = await Promise.all([getForecast(id), getSeasonal(id)]);
+  } catch (error) {
+    console.error(error);
+    if (state.selectedId === id) showForecastError(station, error);
+    return;
+  }
   // Пока ждали ответ, пользователь мог выбрать другой пост — тогда этот ответ уже не нужен
   if (state.selectedId !== id) return;
 
@@ -268,6 +275,21 @@ async function selectStation(id, scrollToForecast) {
   renderForecast(station, forecast);
   renderSeasonal(station, seasonal);
   renderRisk(station, forecast);
+  updateBusiness();
+}
+
+// Прогноз не загрузился: вместо графиков — сообщение об ошибке, данные прошлого поста убираем
+function showForecastError(station, error) {
+  state.forecast = null;
+  state.seasonal = null;
+  document.getElementById('forecast-sub').textContent = '';
+  document.getElementById('forecast-kpis').innerHTML = '';
+  document.getElementById('seasonal-sub').textContent = '';
+  document.getElementById('seasonal-note').hidden = true;
+  const text = `Не удалось загрузить прогноз для поста «${station.name}»: ${error.message}`;
+  showChartMessage('forecast-chart', text);
+  showChartMessage('seasonal-chart', text);
+  renderRisk(station, null);
   updateBusiness();
 }
 
