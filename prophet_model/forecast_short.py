@@ -6,7 +6,7 @@ from prophet import Prophet
 
 plt.rcParams.update({"axes.grid": True, "grid.alpha": 0.3})
 
-FILE = "data/amur_khabarovsk_clean_2002-2026.csv"   # файл с данными
+FILE = "../data/amur_khabarovsk_clean_2002-2026.csv"   # файл с данными
 DATE_COL = "date" # дата
 VALUE_COL = "level_khabarovsk" # уровень воды, см
 HORIZON = 365 # на сколько суток вперёд прогнозируем
