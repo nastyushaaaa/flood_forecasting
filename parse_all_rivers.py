@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Any
+import time
 
 from playwright.sync_api import sync_playwright
 
@@ -8,9 +9,8 @@ class _PageNotFound(Exception):
     """Internal marker: page returned 4xx/5xx (wrong river/city slug)."""
 
 
-def get_chart_data(river: str, city: str, timeout_ms: int = 60_000, chart_timeout_ms: int = 15_000) -> dict | list | None:
-    url = f"https://allrivers.info/gauge/{river}-{city}/waterlevel/"
-
+def get_chart_data(url: str, timeout_ms: int = 60_000, chart_timeout_ms: int = 15_000) -> dict | None:
+    time.sleep(15)
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         context = browser.new_context(
@@ -57,7 +57,7 @@ def _to_number(v: Any) -> float | int | None:
 
 
 def get_water_levels(river: str, city: str) -> dict[datetime, float]:
-    data = get_chart_data(river, city)
+    data = get_chart_data(f"https://allrivers.info/gauge/{river}-{city}/waterlevel/")
     if data is None:
         return {}
 
