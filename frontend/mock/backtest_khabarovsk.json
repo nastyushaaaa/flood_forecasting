@@ -1,0 +1,1202 @@
+{
+ "station_id": "khabarovsk",
+ "today": "2026-10-07",
+ "history": [
+  {
+   "date": "2026-08-08",
+   "level": 448.0
+  },
+  {
+   "date": "2026-08-09",
+   "level": 461.0
+  },
+  {
+   "date": "2026-08-10",
+   "level": 475.0
+  },
+  {
+   "date": "2026-08-11",
+   "level": 487.0
+  },
+  {
+   "date": "2026-08-12",
+   "level": 494.0
+  },
+  {
+   "date": "2026-08-13",
+   "level": 502.0
+  },
+  {
+   "date": "2026-08-14",
+   "level": 504.0
+  },
+  {
+   "date": "2026-08-15",
+   "level": 507.0
+  },
+  {
+   "date": "2026-08-16",
+   "level": 505.0
+  },
+  {
+   "date": "2026-08-17",
+   "level": 503.0
+  },
+  {
+   "date": "2026-08-18",
+   "level": 503.0
+  },
+  {
+   "date": "2026-08-19",
+   "level": 506.0
+  },
+  {
+   "date": "2026-08-20",
+   "level": 504.0
+  },
+  {
+   "date": "2026-08-21",
+   "level": 502.0
+  },
+  {
+   "date": "2026-08-22",
+   "level": 500.0
+  },
+  {
+   "date": "2026-08-23",
+   "level": 504.0
+  },
+  {
+   "date": "2026-08-24",
+   "level": 505.0
+  },
+  {
+   "date": "2026-08-25",
+   "level": 507.0
+  },
+  {
+   "date": "2026-08-26",
+   "level": 507.0
+  },
+  {
+   "date": "2026-08-27",
+   "level": 508.0
+  },
+  {
+   "date": "2026-08-28",
+   "level": 509.0
+  },
+  {
+   "date": "2026-08-29",
+   "level": 509.0
+  },
+  {
+   "date": "2026-08-30",
+   "level": 509.0
+  },
+  {
+   "date": "2026-08-31",
+   "level": 509.0
+  },
+  {
+   "date": "2026-09-01",
+   "level": 508.0
+  },
+  {
+   "date": "2026-09-02",
+   "level": 508.0
+  },
+  {
+   "date": "2026-09-03",
+   "level": 508.0
+  },
+  {
+   "date": "2026-09-04",
+   "level": 504.0
+  },
+  {
+   "date": "2026-09-05",
+   "level": 497.0
+  },
+  {
+   "date": "2026-09-06",
+   "level": 492.0
+  },
+  {
+   "date": "2026-09-07",
+   "level": 491.0
+  },
+  {
+   "date": "2026-09-08",
+   "level": 487.0
+  },
+  {
+   "date": "2026-09-09",
+   "level": 480.0
+  },
+  {
+   "date": "2026-09-10",
+   "level": 471.0
+  },
+  {
+   "date": "2026-09-11",
+   "level": 462.0
+  },
+  {
+   "date": "2026-09-12",
+   "level": 452.0
+  },
+  {
+   "date": "2026-09-13",
+   "level": 444.0
+  },
+  {
+   "date": "2026-09-14",
+   "level": 430.0
+  },
+  {
+   "date": "2026-09-15",
+   "level": 412.0
+  },
+  {
+   "date": "2026-09-16",
+   "level": 394.0
+  },
+  {
+   "date": "2026-09-17",
+   "level": 374.0
+  },
+  {
+   "date": "2026-09-18",
+   "level": 352.0
+  },
+  {
+   "date": "2026-09-19",
+   "level": 332.0
+  },
+  {
+   "date": "2026-09-20",
+   "level": 308.0
+  },
+  {
+   "date": "2026-09-21",
+   "level": 284.0
+  },
+  {
+   "date": "2026-09-22",
+   "level": 255.0
+  },
+  {
+   "date": "2026-09-23",
+   "level": 232.0
+  },
+  {
+   "date": "2026-09-24",
+   "level": 211.0
+  },
+  {
+   "date": "2026-09-25",
+   "level": 194.0
+  },
+  {
+   "date": "2026-09-26",
+   "level": 186.0
+  },
+  {
+   "date": "2026-09-27",
+   "level": 178.0
+  },
+  {
+   "date": "2026-09-28",
+   "level": 169.0
+  },
+  {
+   "date": "2026-09-29",
+   "level": 156.0
+  },
+  {
+   "date": "2026-09-30",
+   "level": 150.0
+  },
+  {
+   "date": "2026-10-01",
+   "level": 145.0
+  },
+  {
+   "date": "2026-10-02",
+   "level": 139.0
+  },
+  {
+   "date": "2026-10-03",
+   "level": 136.0
+  },
+  {
+   "date": "2026-10-04",
+   "level": 135.0
+  },
+  {
+   "date": "2026-10-05",
+   "level": 136.0
+  },
+  {
+   "date": "2026-10-06",
+   "level": 138.0
+  },
+  {
+   "date": "2026-10-07",
+   "level": 134.0
+  }
+ ],
+ "actual": [
+  {
+   "date": "2026-10-08",
+   "level": 130.0
+  },
+  {
+   "date": "2026-10-09",
+   "level": 123.0
+  },
+  {
+   "date": "2026-10-10",
+   "level": 118.0
+  },
+  {
+   "date": "2026-10-11",
+   "level": 113.0
+  },
+  {
+   "date": "2026-10-12",
+   "level": 113.0
+  },
+  {
+   "date": "2026-10-13",
+   "level": 116.0
+  },
+  {
+   "date": "2026-10-14",
+   "level": 121.0
+  },
+  {
+   "date": "2026-10-15",
+   "level": 116.0
+  },
+  {
+   "date": "2026-10-16",
+   "level": 102.0
+  },
+  {
+   "date": "2026-10-17",
+   "level": 90.0
+  },
+  {
+   "date": "2026-10-18",
+   "level": 83.0
+  },
+  {
+   "date": "2026-10-19",
+   "level": 76.0
+  },
+  {
+   "date": "2026-10-20",
+   "level": 69.0
+  },
+  {
+   "date": "2026-10-21",
+   "level": 63.0
+  }
+ ],
+ "models": [
+  {
+   "key": "pg_lstm",
+   "model": "PG-LSTM",
+   "model_note": "нейросеть с физикой паводковой волны, по уровням 4 постов и погоде бассейна (обучена до 2018 г.)",
+   "interval_label": "Коридор 80 % по ошибкам на валидации",
+   "forecast": [
+    {
+     "date": "2026-10-08",
+     "level": 129.1,
+     "level_low": 124.9,
+     "level_high": 133.6,
+     "horizon": 1
+    },
+    {
+     "date": "2026-10-09",
+     "level": 123.1,
+     "level_low": 114.7,
+     "level_high": 131.8,
+     "horizon": 2
+    },
+    {
+     "date": "2026-10-10",
+     "level": 118.6,
+     "level_low": 104.6,
+     "level_high": 132.7,
+     "horizon": 3
+    },
+    {
+     "date": "2026-10-11",
+     "level": 115.5,
+     "level_low": 96.1,
+     "level_high": 134.9,
+     "horizon": 4
+    },
+    {
+     "date": "2026-10-12",
+     "level": 113.9,
+     "level_low": 88.7,
+     "level_high": 140.4,
+     "horizon": 5
+    },
+    {
+     "date": "2026-10-13",
+     "level": 113.6,
+     "level_low": 83.6,
+     "level_high": 144.4,
+     "horizon": 6
+    },
+    {
+     "date": "2026-10-14",
+     "level": 113.6,
+     "level_low": 78.8,
+     "level_high": 148.4,
+     "horizon": 7
+    },
+    {
+     "date": "2026-10-15",
+     "level": 108.4,
+     "level_low": 74.0,
+     "level_high": 146.2,
+     "horizon": 8
+    },
+    {
+     "date": "2026-10-16",
+     "level": 103.1,
+     "level_low": 67.4,
+     "level_high": 144.5,
+     "horizon": 9
+    },
+    {
+     "date": "2026-10-17",
+     "level": 98.7,
+     "level_low": 59.6,
+     "level_high": 145.2,
+     "horizon": 10
+    },
+    {
+     "date": "2026-10-18",
+     "level": 95.0,
+     "level_low": 54.5,
+     "level_high": 144.5,
+     "horizon": 11
+    },
+    {
+     "date": "2026-10-19",
+     "level": 91.8,
+     "level_low": 50.1,
+     "level_high": 143.7,
+     "horizon": 12
+    },
+    {
+     "date": "2026-10-20",
+     "level": 88.5,
+     "level_low": 44.9,
+     "level_high": 144.0,
+     "horizon": 13
+    },
+    {
+     "date": "2026-10-21",
+     "level": 86.3,
+     "level_low": 39.6,
+     "level_high": 146.9,
+     "horizon": 14
+    }
+   ],
+   "skill": [
+    {
+     "horizon": 1,
+     "mae": 3.4,
+     "rmse": 8.4
+    },
+    {
+     "horizon": 2,
+     "mae": 6.0,
+     "rmse": 14.2
+    },
+    {
+     "horizon": 3,
+     "mae": 8.7,
+     "rmse": 18.2
+    },
+    {
+     "horizon": 4,
+     "mae": 11.1,
+     "rmse": 20.5
+    },
+    {
+     "horizon": 5,
+     "mae": 13.1,
+     "rmse": 21.9
+    },
+    {
+     "horizon": 6,
+     "mae": 15.1,
+     "rmse": 23.4
+    },
+    {
+     "horizon": 7,
+     "mae": 17.1,
+     "rmse": 24.1
+    },
+    {
+     "horizon": 8,
+     "mae": 18.7,
+     "rmse": 24.6
+    },
+    {
+     "horizon": 9,
+     "mae": 20.8,
+     "rmse": 27.0
+    },
+    {
+     "horizon": 10,
+     "mae": 23.4,
+     "rmse": 30.3
+    },
+    {
+     "horizon": 11,
+     "mae": 26.3,
+     "rmse": 33.6
+    },
+    {
+     "horizon": 12,
+     "mae": 29.1,
+     "rmse": 36.8
+    },
+    {
+     "horizon": 13,
+     "mae": 32.1,
+     "rmse": 39.8
+    },
+    {
+     "horizon": 14,
+     "mae": 34.7,
+     "rmse": 42.7
+    }
+   ]
+  },
+  {
+   "key": "gpb",
+   "model": "Бустинг (GPB)",
+   "model_note": "градиентный бустинг по уровням постов, водоотдаче и осадкам бассейна, своя модель на каждые сутки",
+   "interval_label": "Коридор 80 % по ошибкам проверки 2025–26",
+   "forecast": [
+    {
+     "date": "2026-10-08",
+     "level": 128.3,
+     "level_low": 118.3,
+     "level_high": 138.2,
+     "horizon": 1
+    },
+    {
+     "date": "2026-10-09",
+     "level": 121.6,
+     "level_low": 104.9,
+     "level_high": 138.2,
+     "horizon": 2
+    },
+    {
+     "date": "2026-10-10",
+     "level": 114.7,
+     "level_low": 91.9,
+     "level_high": 137.5,
+     "horizon": 3
+    },
+    {
+     "date": "2026-10-11",
+     "level": 108.5,
+     "level_low": 82.1,
+     "level_high": 134.9,
+     "horizon": 4
+    },
+    {
+     "date": "2026-10-12",
+     "level": 104.5,
+     "level_low": 74.7,
+     "level_high": 134.4,
+     "horizon": 5
+    },
+    {
+     "date": "2026-10-13",
+     "level": 99.2,
+     "level_low": 66.2,
+     "level_high": 132.1,
+     "horizon": 6
+    },
+    {
+     "date": "2026-10-14",
+     "level": 95.2,
+     "level_low": 58.2,
+     "level_high": 132.2,
+     "horizon": 7
+    },
+    {
+     "date": "2026-10-15",
+     "level": 88.9,
+     "level_low": 49.6,
+     "level_high": 128.2,
+     "horizon": 8
+    },
+    {
+     "date": "2026-10-16",
+     "level": 86.9,
+     "level_low": 41.5,
+     "level_high": 132.2,
+     "horizon": 9
+    },
+    {
+     "date": "2026-10-17",
+     "level": 86.4,
+     "level_low": 38.9,
+     "level_high": 133.9,
+     "horizon": 10
+    },
+    {
+     "date": "2026-10-18",
+     "level": 78.5,
+     "level_low": 31.9,
+     "level_high": 125.1,
+     "horizon": 11
+    },
+    {
+     "date": "2026-10-19",
+     "level": 69.6,
+     "level_low": 16.4,
+     "level_high": 122.8,
+     "horizon": 12
+    },
+    {
+     "date": "2026-10-20",
+     "level": 64.1,
+     "level_low": 8.1,
+     "level_high": 120.1,
+     "horizon": 13
+    },
+    {
+     "date": "2026-10-21",
+     "level": 62.8,
+     "level_low": 7.2,
+     "level_high": 118.3,
+     "horizon": 14
+    }
+   ],
+   "skill": [
+    {
+     "horizon": 1,
+     "mae": 3.6,
+     "rmse": 7.8
+    },
+    {
+     "horizon": 2,
+     "mae": 5.9,
+     "rmse": 13.0
+    },
+    {
+     "horizon": 3,
+     "mae": 8.8,
+     "rmse": 17.8
+    },
+    {
+     "horizon": 4,
+     "mae": 11.1,
+     "rmse": 20.6
+    },
+    {
+     "horizon": 5,
+     "mae": 13.7,
+     "rmse": 23.3
+    },
+    {
+     "horizon": 6,
+     "mae": 16.4,
+     "rmse": 25.7
+    },
+    {
+     "horizon": 7,
+     "mae": 18.5,
+     "rmse": 28.8
+    },
+    {
+     "horizon": 8,
+     "mae": 20.1,
+     "rmse": 30.7
+    },
+    {
+     "horizon": 9,
+     "mae": 22.6,
+     "rmse": 35.4
+    },
+    {
+     "horizon": 10,
+     "mae": 24.9,
+     "rmse": 37.1
+    },
+    {
+     "horizon": 11,
+     "mae": 26.0,
+     "rmse": 36.3
+    },
+    {
+     "horizon": 12,
+     "mae": 28.9,
+     "rmse": 41.5
+    },
+    {
+     "horizon": 13,
+     "mae": 30.3,
+     "rmse": 43.7
+    },
+    {
+     "horizon": 14,
+     "mae": 32.3,
+     "rmse": 43.3
+    }
+   ]
+  },
+  {
+   "key": "linear",
+   "model": "Линейная (Ridge)",
+   "model_note": "Ridge-регрессия по уровням 4 постов за 14 суток и погоде бассейна",
+   "interval_label": "Коридор 80 % по ошибкам проверки 2025–26",
+   "forecast": [
+    {
+     "date": "2026-10-08",
+     "level": 128.8,
+     "level_low": 117.1,
+     "level_high": 140.5,
+     "horizon": 1
+    },
+    {
+     "date": "2026-10-09",
+     "level": 122.7,
+     "level_low": 103.4,
+     "level_high": 142.0,
+     "horizon": 2
+    },
+    {
+     "date": "2026-10-10",
+     "level": 117.3,
+     "level_low": 92.7,
+     "level_high": 141.9,
+     "horizon": 3
+    },
+    {
+     "date": "2026-10-11",
+     "level": 113.0,
+     "level_low": 84.5,
+     "level_high": 141.5,
+     "horizon": 4
+    },
+    {
+     "date": "2026-10-12",
+     "level": 111.1,
+     "level_low": 79.0,
+     "level_high": 143.2,
+     "horizon": 5
+    },
+    {
+     "date": "2026-10-13",
+     "level": 110.1,
+     "level_low": 74.4,
+     "level_high": 145.8,
+     "horizon": 6
+    },
+    {
+     "date": "2026-10-14",
+     "level": 107.9,
+     "level_low": 69.6,
+     "level_high": 146.2,
+     "horizon": 7
+    },
+    {
+     "date": "2026-10-15",
+     "level": 106.9,
+     "level_low": 65.7,
+     "level_high": 148.1,
+     "horizon": 8
+    },
+    {
+     "date": "2026-10-16",
+     "level": 106.5,
+     "level_low": 62.2,
+     "level_high": 150.8,
+     "horizon": 9
+    },
+    {
+     "date": "2026-10-17",
+     "level": 104.7,
+     "level_low": 57.1,
+     "level_high": 152.3,
+     "horizon": 10
+    },
+    {
+     "date": "2026-10-18",
+     "level": 102.0,
+     "level_low": 50.5,
+     "level_high": 153.5,
+     "horizon": 11
+    },
+    {
+     "date": "2026-10-19",
+     "level": 96.7,
+     "level_low": 41.2,
+     "level_high": 152.2,
+     "horizon": 12
+    },
+    {
+     "date": "2026-10-20",
+     "level": 90.3,
+     "level_low": 31.4,
+     "level_high": 149.2,
+     "horizon": 13
+    },
+    {
+     "date": "2026-10-21",
+     "level": 85.6,
+     "level_low": 22.8,
+     "level_high": 148.4,
+     "horizon": 14
+    }
+   ],
+   "skill": [
+    {
+     "horizon": 1,
+     "mae": 4.6,
+     "rmse": 9.1
+    },
+    {
+     "horizon": 2,
+     "mae": 8.3,
+     "rmse": 15.1
+    },
+    {
+     "horizon": 3,
+     "mae": 11.6,
+     "rmse": 19.2
+    },
+    {
+     "horizon": 4,
+     "mae": 14.7,
+     "rmse": 22.3
+    },
+    {
+     "horizon": 5,
+     "mae": 17.3,
+     "rmse": 25.1
+    },
+    {
+     "horizon": 6,
+     "mae": 20.1,
+     "rmse": 27.8
+    },
+    {
+     "horizon": 7,
+     "mae": 22.6,
+     "rmse": 29.9
+    },
+    {
+     "horizon": 8,
+     "mae": 24.8,
+     "rmse": 32.1
+    },
+    {
+     "horizon": 9,
+     "mae": 26.7,
+     "rmse": 34.5
+    },
+    {
+     "horizon": 10,
+     "mae": 28.9,
+     "rmse": 37.1
+    },
+    {
+     "horizon": 11,
+     "mae": 31.3,
+     "rmse": 40.2
+    },
+    {
+     "horizon": 12,
+     "mae": 34.0,
+     "rmse": 43.3
+    },
+    {
+     "horizon": 13,
+     "mae": 36.4,
+     "rmse": 46.0
+    },
+    {
+     "horizon": 14,
+     "mae": 39.0,
+     "rmse": 49.0
+    }
+   ]
+  },
+  {
+   "key": "prophet",
+   "model": "Prophet",
+   "model_note": "сезонная кривая: не знает текущего уровня, прогноз зависит только от дня года",
+   "interval_label": "Коридор 80 % по ошибкам проверки 2025–26",
+   "forecast": [
+    {
+     "date": "2026-10-08",
+     "level": 95.6,
+     "level_low": 18.8,
+     "level_high": 172.5,
+     "horizon": 1
+    },
+    {
+     "date": "2026-10-09",
+     "level": 90.2,
+     "level_low": 13.2,
+     "level_high": 167.2,
+     "horizon": 2
+    },
+    {
+     "date": "2026-10-10",
+     "level": 84.8,
+     "level_low": 7.8,
+     "level_high": 161.9,
+     "horizon": 3
+    },
+    {
+     "date": "2026-10-11",
+     "level": 79.5,
+     "level_low": 2.4,
+     "level_high": 156.6,
+     "horizon": 4
+    },
+    {
+     "date": "2026-10-12",
+     "level": 74.2,
+     "level_low": -2.9,
+     "level_high": 151.3,
+     "horizon": 5
+    },
+    {
+     "date": "2026-10-13",
+     "level": 68.9,
+     "level_low": -8.0,
+     "level_high": 145.9,
+     "horizon": 6
+    },
+    {
+     "date": "2026-10-14",
+     "level": 63.7,
+     "level_low": -13.1,
+     "level_high": 140.5,
+     "horizon": 7
+    },
+    {
+     "date": "2026-10-15",
+     "level": 58.5,
+     "level_low": -18.4,
+     "level_high": 135.4,
+     "horizon": 8
+    },
+    {
+     "date": "2026-10-16",
+     "level": 53.2,
+     "level_low": -23.8,
+     "level_high": 130.3,
+     "horizon": 9
+    },
+    {
+     "date": "2026-10-17",
+     "level": 47.9,
+     "level_low": -29.1,
+     "level_high": 125.0,
+     "horizon": 10
+    },
+    {
+     "date": "2026-10-18",
+     "level": 42.6,
+     "level_low": -34.5,
+     "level_high": 119.7,
+     "horizon": 11
+    },
+    {
+     "date": "2026-10-19",
+     "level": 37.3,
+     "level_low": -39.9,
+     "level_high": 114.4,
+     "horizon": 12
+    },
+    {
+     "date": "2026-10-20",
+     "level": 31.8,
+     "level_low": -45.3,
+     "level_high": 109.0,
+     "horizon": 13
+    },
+    {
+     "date": "2026-10-21",
+     "level": 26.3,
+     "level_low": -50.7,
+     "level_high": 103.4,
+     "horizon": 14
+    }
+   ],
+   "skill": [
+    {
+     "horizon": 1,
+     "mae": 43.9,
+     "rmse": 60.0
+    },
+    {
+     "horizon": 2,
+     "mae": 44.0,
+     "rmse": 60.1
+    },
+    {
+     "horizon": 3,
+     "mae": 44.1,
+     "rmse": 60.1
+    },
+    {
+     "horizon": 4,
+     "mae": 44.1,
+     "rmse": 60.1
+    },
+    {
+     "horizon": 5,
+     "mae": 44.1,
+     "rmse": 60.1
+    },
+    {
+     "horizon": 6,
+     "mae": 44.0,
+     "rmse": 60.0
+    },
+    {
+     "horizon": 7,
+     "mae": 43.9,
+     "rmse": 59.9
+    },
+    {
+     "horizon": 8,
+     "mae": 44.0,
+     "rmse": 60.0
+    },
+    {
+     "horizon": 9,
+     "mae": 44.1,
+     "rmse": 60.1
+    },
+    {
+     "horizon": 10,
+     "mae": 44.1,
+     "rmse": 60.1
+    },
+    {
+     "horizon": 11,
+     "mae": 44.2,
+     "rmse": 60.2
+    },
+    {
+     "horizon": 12,
+     "mae": 44.2,
+     "rmse": 60.2
+    },
+    {
+     "horizon": 13,
+     "mae": 44.2,
+     "rmse": 60.2
+    },
+    {
+     "horizon": 14,
+     "mae": 44.1,
+     "rmse": 60.1
+    }
+   ]
+  },
+  {
+   "key": "naive",
+   "model": "Инерционный",
+   "model_note": "точка отсчёта: уровень останется таким же, как в день прогноза",
+   "interval_label": "Коридор 80 % по ошибкам проверки 2025–26",
+   "forecast": [
+    {
+     "date": "2026-10-08",
+     "level": 134.0,
+     "level_low": 120.0,
+     "level_high": 148.0,
+     "horizon": 1
+    },
+    {
+     "date": "2026-10-09",
+     "level": 134.0,
+     "level_low": 108.9,
+     "level_high": 159.1,
+     "horizon": 2
+    },
+    {
+     "date": "2026-10-10",
+     "level": 134.0,
+     "level_low": 99.3,
+     "level_high": 168.7,
+     "horizon": 3
+    },
+    {
+     "date": "2026-10-11",
+     "level": 134.0,
+     "level_low": 91.1,
+     "level_high": 176.9,
+     "horizon": 4
+    },
+    {
+     "date": "2026-10-12",
+     "level": 134.0,
+     "level_low": 84.0,
+     "level_high": 184.0,
+     "horizon": 5
+    },
+    {
+     "date": "2026-10-13",
+     "level": 134.0,
+     "level_low": 77.9,
+     "level_high": 190.1,
+     "horizon": 6
+    },
+    {
+     "date": "2026-10-14",
+     "level": 134.0,
+     "level_low": 72.4,
+     "level_high": 195.6,
+     "horizon": 7
+    },
+    {
+     "date": "2026-10-15",
+     "level": 134.0,
+     "level_low": 67.1,
+     "level_high": 200.9,
+     "horizon": 8
+    },
+    {
+     "date": "2026-10-16",
+     "level": 134.0,
+     "level_low": 61.7,
+     "level_high": 206.3,
+     "horizon": 9
+    },
+    {
+     "date": "2026-10-17",
+     "level": 134.0,
+     "level_low": 56.3,
+     "level_high": 211.7,
+     "horizon": 10
+    },
+    {
+     "date": "2026-10-18",
+     "level": 134.0,
+     "level_low": 51.1,
+     "level_high": 216.9,
+     "horizon": 11
+    },
+    {
+     "date": "2026-10-19",
+     "level": 134.0,
+     "level_low": 46.2,
+     "level_high": 221.8,
+     "horizon": 12
+    },
+    {
+     "date": "2026-10-20",
+     "level": 134.0,
+     "level_low": 41.5,
+     "level_high": 226.5,
+     "horizon": 13
+    },
+    {
+     "date": "2026-10-21",
+     "level": 134.0,
+     "level_low": 37.1,
+     "level_high": 230.9,
+     "horizon": 14
+    }
+   ],
+   "skill": [
+    {
+     "horizon": 1,
+     "mae": 6.8,
+     "rmse": 10.9
+    },
+    {
+     "horizon": 2,
+     "mae": 12.9,
+     "rmse": 19.6
+    },
+    {
+     "horizon": 3,
+     "mae": 18.7,
+     "rmse": 27.1
+    },
+    {
+     "horizon": 4,
+     "mae": 24.0,
+     "rmse": 33.5
+    },
+    {
+     "horizon": 5,
+     "mae": 28.7,
+     "rmse": 39.0
+    },
+    {
+     "horizon": 6,
+     "mae": 32.9,
+     "rmse": 43.8
+    },
+    {
+     "horizon": 7,
+     "mae": 36.6,
+     "rmse": 48.0
+    },
+    {
+     "horizon": 8,
+     "mae": 39.8,
+     "rmse": 52.2
+    },
+    {
+     "horizon": 9,
+     "mae": 42.8,
+     "rmse": 56.4
+    },
+    {
+     "horizon": 10,
+     "mae": 45.6,
+     "rmse": 60.6
+    },
+    {
+     "horizon": 11,
+     "mae": 48.5,
+     "rmse": 64.7
+    },
+    {
+     "horizon": 12,
+     "mae": 51.2,
+     "rmse": 68.5
+    },
+    {
+     "horizon": 13,
+     "mae": 53.8,
+     "rmse": 72.2
+    },
+    {
+     "horizon": 14,
+     "mae": 56.2,
+     "rmse": 75.6
+    }
+   ]
+  }
+ ],
+ "pending": [],
+ "note": null
+}
