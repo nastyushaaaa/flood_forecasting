@@ -43,6 +43,7 @@
   --chart-band: #cfe5eb;           /* коридор неопределённости прогноза */
   --chart-seasonal: #9a6a1f;       /* сезонный прогноз */
   --chart-seasonal-band: #f3e6cf;
+  --chart-other: #9aa5ae;          /* прогнозы невыбранных моделей — тонкие линии фоном */
   --chart-grid: #e6eaed;
 
   /* --- Типографика -------------------------------------------------------------------- */
@@ -73,6 +74,7 @@
 
   --chart-fact: #c9d3da; --chart-forecast: #6cc2d6; --chart-band: #1c3c46;
   --chart-seasonal: #d6a85a; --chart-seasonal-band: #3a2e1a; --chart-grid: #1d272e;
+  --chart-other: #5e6c77;
 }
 
 /* ===== Темы банков: меняется только группа «Бренд», остальное как в светлой ============= */

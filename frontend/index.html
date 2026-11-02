@@ -73,9 +73,9 @@
       <div>
         <p class="overline muted" id="snapshot-info">Загрузка…</p>
         <h1 class="h1">Мониторинг уровня воды рек</h1>
-        <!-- Показывается, пока сайт работает на тестовых данных (USE_MOCK = true в js/api.js) -->
+        <!-- Показывается, когда бэкенд не ответил и сайт работает на сохранённых данных из mock/ (isMockData() в js/api.js) -->
         <span class="u-badge u-badge--nodata demo-badge" id="demo-badge" hidden>
-          Демонстрационные данные · бэкенд пока не подключён
+          Сохранённый срез данных · бэкенд не подключён, дата не выбирается
         </span>
       </div>
       <div class="page-header__actions">
@@ -149,22 +149,59 @@
     <article class="u-card" id="forecast-card">
       <h2 class="h2" id="forecast-title">Прогноз уровня воды</h2>
       <p class="caption muted card-sub" id="forecast-sub"></p>
+      <!-- Кнопка на каждую модель проекта: выбранная рисуется с коридором, остальные — серыми линиями -->
+      <div class="u-chips model-chips" id="forecast-models" role="group" aria-label="Модель прогноза"></div>
+      <p class="caption muted chart-pending" id="forecast-pending" hidden></p>
       <div class="legend caption">
         <span><svg width="20" height="4" aria-hidden="true"><line x1="0" x2="20" y1="2" y2="2" stroke="var(--chart-fact)" stroke-width="2"/></svg>Факт</span>
-        <span><svg width="20" height="4" aria-hidden="true"><line x1="0" x2="20" y1="2" y2="2" stroke="var(--chart-forecast)" stroke-width="2" stroke-dasharray="6 4"/></svg>Прогноз</span>
-        <span><svg width="16" height="10" aria-hidden="true"><rect width="16" height="10" rx="2" fill="var(--chart-band)"/></svg><span id="forecast-band-label">Коридор</span></span>
+        <span id="forecast-legend-actual" hidden><svg width="20" height="4" aria-hidden="true"><line x1="0" x2="20" y1="2" y2="2" stroke="var(--chart-fact)" stroke-width="2" stroke-dasharray="2 3"/></svg>Было на самом деле</span>
+        <span id="forecast-legend-model"><svg width="20" height="4" aria-hidden="true"><line x1="0" x2="20" y1="2" y2="2" stroke="var(--chart-forecast)" stroke-width="2" stroke-dasharray="6 4"/></svg><span id="forecast-model-label">Прогноз</span></span>
+        <span id="forecast-legend-band"><svg width="16" height="10" aria-hidden="true"><rect width="16" height="10" rx="2" fill="var(--chart-band)"/></svg><span id="forecast-band-label">Коридор</span></span>
+        <span id="forecast-legend-others" hidden><svg width="20" height="4" aria-hidden="true"><line x1="0" x2="20" y1="2" y2="2" stroke="var(--chart-other)" stroke-width="1.5"/></svg>Другие модели</span>
       </div>
       <div id="forecast-chart" class="chart chart--forecast"></div>
       <div class="kpi-row kpi-row--3" id="forecast-kpis"></div>
     </article>
 
+    <!-- Проверка: прогноз всех моделей за 14 суток до последнего замера и что было на самом деле -->
+    <article class="u-card" id="backtest-card" hidden>
+      <h2 class="h2" id="backtest-title">Проверка: прогноз двухнедельной давности и что было на самом деле</h2>
+      <p class="caption muted card-sub" id="backtest-sub"></p>
+      <div class="u-chips model-chips" id="backtest-models" role="group" aria-label="Модель в проверке"></div>
+      <div class="legend caption">
+        <span><svg width="20" height="4" aria-hidden="true"><line x1="0" x2="20" y1="2" y2="2" stroke="var(--chart-fact)" stroke-width="2"/></svg>Факт</span>
+        <span><svg width="20" height="4" aria-hidden="true"><line x1="0" x2="20" y1="2" y2="2" stroke="var(--chart-fact)" stroke-width="2" stroke-dasharray="2 3"/></svg>Было на самом деле</span>
+        <span><svg width="20" height="4" aria-hidden="true"><line x1="0" x2="20" y1="2" y2="2" stroke="var(--chart-forecast)" stroke-width="2" stroke-dasharray="6 4"/></svg><span id="backtest-model-label">Прогноз</span></span>
+        <span><svg width="16" height="10" aria-hidden="true"><rect width="16" height="10" rx="2" fill="var(--chart-band)"/></svg><span id="backtest-band-label">Коридор</span></span>
+        <span><svg width="20" height="4" aria-hidden="true"><line x1="0" x2="20" y1="2" y2="2" stroke="var(--chart-other)" stroke-width="1.5"/></svg>Другие модели</span>
+      </div>
+      <div id="backtest-chart" class="chart chart--forecast"></div>
+      <p class="caption muted chart-note" id="backtest-note"></p>
+    </article>
+
+    <!-- Ошибки моделей на проверке model_comparison: помогает выбрать, какой модели верить на каком горизонте -->
+    <article class="u-card" id="skill-card" hidden>
+      <h2 class="h2">Точность моделей</h2>
+      <p class="caption muted card-sub">Средняя ошибка (MAE) прогноза на проверке 02.08.2025–01.08.2026: чем ниже линия, тем точнее модель</p>
+      <div class="legend caption">
+        <span><svg width="20" height="4" aria-hidden="true"><line x1="0" x2="20" y1="2" y2="2" stroke="var(--chart-forecast)" stroke-width="2.5"/></svg><span id="skill-model-label">Выбранная модель</span></span>
+        <span><svg width="20" height="4" aria-hidden="true"><line x1="0" x2="20" y1="2" y2="2" stroke="var(--chart-other)" stroke-width="1.5"/></svg>Другие модели</span>
+        <span><svg width="20" height="4" aria-hidden="true"><line x1="0" x2="20" y1="2" y2="2" stroke="var(--chart-other)" stroke-width="1.5" stroke-dasharray="2 3"/></svg>Инерционный (точка отсчёта)</span>
+      </div>
+      <div id="skill-chart" class="chart chart--skill"></div>
+      <p class="caption muted chart-note" id="skill-note"></p>
+    </article>
+
     <article class="u-card" id="seasonal-card">
       <h2 class="h2">Сезонный прогноз на год вперёд</h2>
       <p class="caption muted card-sub" id="seasonal-sub"></p>
+      <div class="u-chips model-chips" id="seasonal-models" role="group" aria-label="Модель сезонного прогноза"></div>
+      <p class="caption muted chart-pending" id="seasonal-pending" hidden></p>
       <div class="legend caption">
         <span><svg width="20" height="4" aria-hidden="true"><line x1="0" x2="20" y1="2" y2="2" stroke="var(--chart-fact)" stroke-width="2"/></svg>Факт</span>
-        <span><svg width="20" height="4" aria-hidden="true"><line x1="0" x2="20" y1="2" y2="2" stroke="var(--chart-seasonal)" stroke-width="2"/></svg>Ожидаемый ход</span>
-        <span><svg width="16" height="10" aria-hidden="true"><rect width="16" height="10" rx="2" fill="var(--chart-seasonal-band)"/></svg>Обычный разброс</span>
+        <span><svg width="20" height="4" aria-hidden="true"><line x1="0" x2="20" y1="2" y2="2" stroke="var(--chart-seasonal)" stroke-width="2"/></svg><span id="seasonal-model-label">Ожидаемый ход</span></span>
+        <span><svg width="16" height="10" aria-hidden="true"><rect width="16" height="10" rx="2" fill="var(--chart-seasonal-band)"/></svg><span id="seasonal-band-label">Обычный разброс</span></span>
+        <span id="seasonal-legend-others" hidden><svg width="20" height="4" aria-hidden="true"><line x1="0" x2="20" y1="2" y2="2" stroke="var(--chart-other)" stroke-width="1.5"/></svg>Другие модели</span>
       </div>
       <div id="seasonal-chart" class="chart chart--seasonal"></div>
       <div class="u-callout" id="seasonal-note" hidden></div>
@@ -230,7 +267,7 @@
       </div>
       <div>
         <div class="overline">Модели прогноза</div>
-        <p>Краткосрочный: PG-LSTM, 14 суток<br>Сезонный: Prophet, 365 суток</p>
+        <p>Краткосрочный, 14 суток: PG-LSTM, бустинг, Ridge, Prophet<br>Сезонный, 365 суток: Prophet, тренд, климатическая норма</p>
       </div>
       <div>
         <div class="overline">Проект</div>

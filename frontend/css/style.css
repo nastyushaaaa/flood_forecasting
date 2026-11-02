@@ -167,6 +167,7 @@ body {
 }
 .legend { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); margin-top: var(--space-3); }
 .legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.legend > span[hidden] { display: none; }   /* пункты легенды, которых сейчас нет на графике */
 #forecast-card .legend, #seasonal-card .legend { margin: 0 0 var(--space-2); }
 
 .map-marker { background: none; border: none; cursor: pointer; }
@@ -216,6 +217,12 @@ body {
 .chart { width: 100%; }
 .chart--forecast { height: 300px; }
 .chart--seasonal { height: 220px; }
+.chart--skill { height: 220px; }
+/* Кнопки выбора модели над графиком и строка «ещё обучаются» */
+.model-chips { margin: 0 0 var(--space-3); }
+.model-chips:empty { display: none; }
+.chart-pending { margin: 0 0 var(--space-2); }
+.chart-note { margin-top: var(--space-3); }
 .chart-empty {
   height: 100%; display: flex; align-items: center; justify-content: center; text-align: center;
   padding: var(--space-5); border-radius: var(--radius-md);

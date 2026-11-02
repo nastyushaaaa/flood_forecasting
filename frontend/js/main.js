@@ -20,7 +20,13 @@ const state = {
   rivers: new Set(),                 // выбранные реки
   statuses: new Set(),               // выбранные статусы
   selectedId: DEFAULT_STATION,       // пост, чей прогноз показан
-  forecast: null,                    // прогнозы выбранного поста (нужны блоку бизнес-выводов)
+  forecastData: null,                // ответ getForecast(): факт и прогнозы всех моделей выбранного поста
+  seasonalData: null,                // ответ getSeasonal()
+  backtestData: null,                // проверка: последний прогноз моделей с погодой и что было на самом деле
+  forecastKey: null,                 // выбранная модель краткосрочного прогноза; null — первая (основная)
+  backtestKey: null,                 // выбранная модель в проверке
+  seasonalKey: null,                 // выбранная модель сезонного прогноза
+  forecast: null,                    // прогноз выбранной модели (нужен «Ближайшему риску» и бизнес-выводам)
   seasonal: null,
 };
 
@@ -85,8 +91,13 @@ async function loadAll() {
     // Статус считаем один раз и запоминаем прямо в объекте поста
     state.data.stations.forEach((s) => { s.status = getStatus(s.level, s.thresholds); });
 
-    // При первой загрузке подставляем время среза в поле даты
+    // При первой загрузке подставляем время среза в поле даты; выбрать можно только даты, на которые есть замеры
     if (!dateInput.value) dateInput.value = state.data.updated_at.slice(0, 16);
+    if (state.data.available_from) dateInput.min = `${state.data.available_from}T00:00`;
+    if (state.data.available_to) dateInput.max = `${state.data.available_to}T23:59`;
+    document.getElementById('demo-badge').hidden = !isMockData();   // метка «сохранённый срез»
+    // В сохранённых данных срез один: дату выбрать нельзя, пока не подключён бэкенд
+    dateInput.disabled = isMockData();
 
     renderFilters();
     renderHeader();
@@ -155,8 +166,11 @@ function renderHeader() {
   const active = stations.filter((s) => s.status !== 'nodata').length;
   document.getElementById('snapshot-info').textContent =
     `Срез на ${formatDate(updated_at)} ${formatTime(updated_at)} МСК · ${active} ${plural(active, 'активный пост', 'активных поста', 'активных постов')}`;
+  // Сбор по расписанию пока не настроен (next_update_at = null): вместо него показываем дату самого свежего замера
+  const latest = stations.map((s) => s.measured_at).filter(Boolean).sort().at(-1);
   document.getElementById('update-info').innerHTML =
-    `Последний сбор: ${formatDate(updated_at)} ${formatTime(updated_at)} МСК<br>Следующий: ${formatTime(next_update_at)} МСК`;
+    `Последний сбор: ${formatDate(updated_at)} ${formatTime(updated_at)} МСК<br>`
+    + (next_update_at ? `Следующий: ${formatTime(next_update_at)} МСК` : `Самый свежий замер: ${formatDate(latest)}`);
 }
 
 // ---------- Все блоки, которые зависят от фильтров ----------
@@ -259,16 +273,23 @@ async function selectStation(id, scrollToForecast) {
     `Прогноз уровня воды · ${station.name}, р. ${station.river}`;
   if (scrollToForecast) document.getElementById('forecast-card').scrollIntoView({ behavior: 'smooth' });
 
-  // Прогнозы независимы: если один не загрузился, второй всё равно показываем
-  const [forecastResult, seasonalResult] = await Promise.allSettled([getForecast(id), getSeasonal(id)]);
+  // Прогнозы независимы: если один не загрузился, остальные всё равно показываем
+  const at = document.getElementById('filter-date').value;
+  const [forecastResult, backtestResult, seasonalResult] = await Promise.allSettled(
+    [getForecast(id, at), getBacktest(id), getSeasonal(id, at)]);
   // Пока ждали ответ, пользователь мог выбрать другой пост — тогда этот ответ уже не нужен
   if (state.selectedId !== id) return;
 
-  state.forecast = forecastResult.status === 'fulfilled' ? forecastResult.value : null;
-  state.seasonal = seasonalResult.status === 'fulfilled' ? seasonalResult.value : null;
-  if (forecastResult.status === 'fulfilled') renderForecast(station, state.forecast);
+  state.forecastData = forecastResult.status === 'fulfilled' ? forecastResult.value : null;
+  state.backtestData = backtestResult.status === 'fulfilled' ? backtestResult.value : null;
+  state.seasonalData = seasonalResult.status === 'fulfilled' ? seasonalResult.value : null;
+  if (forecastResult.status === 'fulfilled') renderForecast(station);
   else showForecastError(station, 'forecast', forecastResult.reason);
-  if (seasonalResult.status === 'fulfilled') renderSeasonal(station, state.seasonal);
+  if (backtestResult.status === 'rejected') {
+    console.error(`Не загружена проверка прогноза для поста ${station.id}:`, backtestResult.reason);
+  }
+  renderBacktest(station);
+  if (seasonalResult.status === 'fulfilled') renderSeasonal(station);
   else showForecastError(station, 'seasonal', seasonalResult.reason);
   renderRisk(station, state.forecast);
   updateBusiness();
@@ -279,9 +300,15 @@ async function selectStation(id, scrollToForecast) {
 function showForecastError(station, kind, error) {
   const label = kind === 'forecast' ? 'краткосрочный' : 'сезонный';
   console.error(`Не загружен ${label} прогноз для поста ${station.id}:`, error);
+  state[kind] = null;
   document.getElementById(`${kind}-sub`).textContent = '';
-  if (kind === 'forecast') document.getElementById('forecast-kpis').innerHTML = '';
-  else document.getElementById('seasonal-note').hidden = true;
+  document.getElementById(`${kind}-models`).innerHTML = '';
+  document.getElementById(`${kind}-pending`).hidden = true;
+  if (kind === 'forecast') {
+    document.getElementById('forecast-kpis').innerHTML = '';
+  } else {
+    document.getElementById('seasonal-note').hidden = true;
+  }
   showChartMessage(`${kind}-chart`, `Не удалось загрузить ${label} прогноз для поста «${station.name}»: ${error.message}`);
 }
 
@@ -291,43 +318,180 @@ function updateBusiness() {
   renderBusiness(stationsInArea(), areaLabel(), station, state.forecast, state.seasonal);
 }
 
-function renderForecast(station, fc) {
+// ---------- Выбор модели ----------
+// Модель с кодом key из ответа API; если её нет у этого поста — первая (основная). null — моделей нет.
+function pickModel(data, key) {
+  if (!data || data.models.length === 0) return null;
+  return data.models.find((m) => m.key === key) || data.models[0];
+}
+
+// Кнопки моделей над графиком. Одна модель — кнопки не нужны.
+function renderModelChips(elementId, models, selected) {
+  document.getElementById(elementId).innerHTML = models.length > 1
+    ? models.map((m) => chip(escapeHtml(m.model), m === selected, m.key)).join('')
+    : '';
+}
+
+// Строка-пояснение над графиком: какие модели ещё обучаются на сервере (pending)
+// или почему части моделей нет (note) — например, нет свежей погоды бассейна
+function renderPending(elementId, pending, note = null) {
+  const element = document.getElementById(elementId);
+  const hasPending = pending && pending.length > 0;
+  element.hidden = !hasPending && !note;
+  element.textContent = hasPending
+    ? `Ещё обучаются на сервере: ${pending.join(', ')}. Нажмите «Обновить данные» через пару минут.`
+    : (note || '');
+}
+
+// Клик по кнопке модели. kind — 'forecast', 'backtest' или 'seasonal'. Выбор запоминаем: при смене поста
+// остаётся та же модель, если она есть и у нового поста
+function selectModel(kind, key) {
+  const station = state.data.stations.find((s) => s.id === state.selectedId);
+  if (kind === 'forecast') {
+    state.forecastKey = key;
+    renderForecast(station);
+    renderRisk(station, state.forecast);
+  } else if (kind === 'backtest') {
+    state.backtestKey = key;
+    renderBacktest(station);
+    return;                          // бизнес-выводы считаются по прогнозу в будущее, проверка их не меняет
+  } else {
+    state.seasonalKey = key;
+    renderSeasonal(station);
+  }
+  updateBusiness();
+}
+
+// ---------- Краткосрочный прогноз ----------
+function renderForecast(station) {
+  const data = state.forecastData;
   const kpis = document.getElementById('forecast-kpis');
-  if (!fc) {
+  const fc = pickModel(data, state.forecastKey);
+  state.forecast = fc;
+
+  if (!data) {
     document.getElementById('forecast-sub').textContent = '';
+    renderModelChips('forecast-models', [], null);
+    renderPending('forecast-pending', []);
     kpis.innerHTML = '';
-    showChartMessage('forecast-chart', `Краткосрочный прогноз для поста «${station.name}» пока не рассчитывается.`);
+    // В тестовых данных прогноз есть только у Хабаровска — для остальных постов текст как в прототипе
+    showChartMessage('forecast-chart', `По посту «${station.name}» нет замеров: прогноз пока не рассчитывается.`);
     return;
   }
 
-  document.getElementById('forecast-sub').textContent = `${fc.model}: ${fc.model_note}`;
-  document.getElementById('forecast-band-label').textContent = fc.interval_label;
-  drawForecastChart(fc, station.thresholds, FORECAST_KPI_HORIZONS);
+  renderModelChips('forecast-models', data.models, fc);
+  // Если моделей нет, причина — в подзаголовке; если есть, но не все, — строкой над графиком
+  renderPending('forecast-pending', data.pending, fc ? data.note : null);
+  document.getElementById('forecast-sub').textContent = fc
+    ? `${fc.model}: ${fc.model_note}`
+    : (data.note || 'Модели ещё обучаются, пока показан только факт.');
+  document.getElementById('forecast-legend-model').hidden = !fc;
+  document.getElementById('forecast-legend-band').hidden = !fc;
+  document.getElementById('forecast-legend-others').hidden = data.models.length < 2;
+  document.getElementById('forecast-legend-actual').hidden = data.actual.length === 0;
+  if (fc) {
+    document.getElementById('forecast-model-label').textContent = fc.model;
+    document.getElementById('forecast-band-label').textContent = fc.interval_label;
+  }
+  drawForecastChart(data, fc, station.thresholds, FORECAST_KPI_HORIZONS);
 
-  // Карточки «через N дней»: прогноз, коридор и статус по верхней границе коридора
-  kpis.innerHTML = fc.forecast
+  // Карточки «через N дней»: прогноз, коридор и статус по верхней границе коридора.
+  // Если дата прогноза в прошлом, добавляем, сколько было на самом деле
+  kpis.innerHTML = !fc ? '' : fc.forecast
     .filter((p) => FORECAST_KPI_HORIZONS.includes(p.horizon))
     .map((p) => {
       const upper = getStatus(p.level_high, station.thresholds);
+      const actual = data.actual.find((a) => a.date === p.date);
       return kpiCard(
         `Через ${p.horizon} ${plural(p.horizon, 'день', 'дня', 'дней')} · ${formatDayMonth(p.date)}`,
         `${formatLevel(p.level)} см`,
-        `${fc.interval_label}: ${formatLevel(p.level_low)}–${formatLevel(p.level_high)} см · верхняя граница: ${STATUSES[upper].short.toLowerCase()}`,
+        `${fc.interval_label}: ${formatLevel(p.level_low)}–${formatLevel(p.level_high)} см · верхняя граница: ${STATUSES[upper].short.toLowerCase()}`
+          + (actual ? ` · было: ${formatLevel(actual.level)} см` : ''),
       );
     }).join('');
 }
 
-function renderSeasonal(station, seas) {
+// ---------- Проверка: прогноз двухнедельной давности и что было ----------
+// Прогноз всех моделей за 14 суток до последнего замера рядом с фактом за эти дни.
+// Модели этих дней при обучении не видели, поэтому это честная проверка и сравнение моделей между собой
+function renderBacktest(station) {
+  const card = document.getElementById('backtest-card');
+  const data = state.backtestData;
+  const fc = pickModel(data, state.backtestKey);
+  card.hidden = !fc;
+  renderSkill(data, fc);
+  if (!fc) return;
+
+  renderModelChips('backtest-models', data.models, fc);
+  document.getElementById('backtest-sub').textContent =
+    `Прогноз от ${formatDate(data.today)}: как модели угадали следующие две недели. ${fc.model}: ${fc.model_note}`;
+  document.getElementById('backtest-model-label').textContent = fc.model;
+  document.getElementById('backtest-band-label').textContent = fc.interval_label;
+  drawForecastChart(data, fc, station.thresholds, FORECAST_KPI_HORIZONS, 'backtest-chart');
+
+  // Вывод текстом: насколько модель ошиблась через 1 / 7 / 14 суток
+  const errors = fc.forecast
+    .filter((p) => FORECAST_KPI_HORIZONS.includes(p.horizon))
+    .map((p) => ({ point: p, actual: data.actual.find((a) => a.date === p.date) }))
+    .filter((e) => e.actual)
+    .map(({ point, actual }) => `через ${point.horizon} ${plural(point.horizon, 'сутки', 'суток', 'суток')} `
+      + `прогноз ${formatLevel(point.level)} см, было ${formatLevel(actual.level)} см`);
+  document.getElementById('backtest-note').textContent = errors.length
+    ? `${fc.model}: ${errors.join('; ')}.`
+    : 'Фактических замеров после даты прогноза пока нет.';
+}
+
+// ---------- Точность моделей ----------
+// data — проверка (getBacktest), fc — выбранная в ней модель.
+// Карточка видна, если хотя бы у двух моделей есть ошибки проверки — иначе сравнивать нечего
+function renderSkill(data, fc) {
+  const card = document.getElementById('skill-card');
+  const models = data ? data.models.filter((m) => m.skill.length > 0) : [];
+  card.hidden = models.length < 2 || !fc;
+  if (card.hidden) return;
+
+  document.getElementById('skill-model-label').textContent = fc.model;
+  drawSkillChart(models, fc.key);
+
+  // Вывод текстом для тех, кто графики не читает: ошибка выбранной модели на 1 и 14 сутки против инерционного
+  const at = (m, h) => m.skill.find((p) => p.horizon === h);
+  const lastHorizon = fc.skill.length ? fc.skill[fc.skill.length - 1].horizon : null;
+  const naive = models.find((m) => m.key === 'naive');
+  const note = document.getElementById('skill-note');
+  if (!lastHorizon) {
+    note.textContent = `Модель «${fc.model}» на проверке не оценивалась.`;
+    return;
+  }
+  const own = `${fc.model} ошибается в среднем на ${formatLevel(at(fc, 1).mae)} см через сутки `
+    + `и на ${formatLevel(at(fc, lastHorizon).mae)} см через ${lastHorizon} ${plural(lastHorizon, 'сутки', 'суток', 'суток')}`;
+  note.textContent = naive && naive !== fc
+    ? `${own}; инерционный прогноз — на ${formatLevel(at(naive, 1).mae)} и ${formatLevel(at(naive, lastHorizon).mae)} см.`
+    : `${own}.`;
+}
+
+// ---------- Сезонный прогноз ----------
+function renderSeasonal(station) {
+  const data = state.seasonalData;
   const note = document.getElementById('seasonal-note');
+  const seas = pickModel(data, state.seasonalKey);
+  state.seasonal = seas;
+  renderModelChips('seasonal-models', data ? data.models : [], seas);
+  renderPending('seasonal-pending', data ? data.pending : []);
+
   if (!seas) {
     document.getElementById('seasonal-sub').textContent = '';
     note.hidden = true;
-    showChartMessage('seasonal-chart', `Сезонный прогноз для поста «${station.name}» пока не рассчитывается.`);
+    showChartMessage('seasonal-chart', data
+      ? 'Сезонные модели ещё обучаются на сервере.'
+      : `Сезонный прогноз для поста «${station.name}» пока не рассчитывается.`);
     return;
   }
 
   document.getElementById('seasonal-sub').textContent = `${seas.model}: ${seas.model_note}`;
-  drawSeasonalChart(seas, station.thresholds);
+  document.getElementById('seasonal-model-label').textContent = seas.model;
+  document.getElementById('seasonal-band-label').textContent = seas.interval_label;
+  document.getElementById('seasonal-legend-others').hidden = data.models.length < 2;
+  drawSeasonalChart(data, seas, station.thresholds);
 
   // Вывод под графиком: дойдёт ли ожидаемый пик до поймы
   const peak = seas.seasonal.reduce((max, p) => (p.level > max.level ? p : max));
@@ -361,6 +525,14 @@ function renderRisk(station, fc) {
     return;
   }
   const days = fc.forecast.length;
+  // Выше опасного порогов уже нет: firstCrossing ничего не найдёт, но писать «не превышаются» нельзя
+  if (station.status === 'danger') {
+    const last = fc.forecast[days - 1];
+    textEl.textContent = `${station.name}: опасный уровень уже превышен`;
+    noteEl.textContent = `на ${formatLevel(marginToDanger(station))} см; через ${days} ${plural(days, 'сутки', 'суток', 'суток')} `
+      + `по прогнозу ${formatLevel(last.level)} см (${fc.model})`;
+    return;
+  }
   textEl.textContent = `${station.name}: пороги не превышаются`;
   noteEl.textContent = `в ближайшие ${days} ${plural(days, 'сутки', 'суток', 'суток')}, по верхней границе коридора`;
 }
@@ -394,7 +566,6 @@ function exportCsv() {
 function init() {
   initMap(applyThemeFromUrl());
   renderMapLegend();
-  document.getElementById('demo-badge').hidden = !USE_MOCK;   // метка «демонстрационные данные»
 
   // Клики по чипам ловим на контейнере: чипы перерисовываются, а обработчик остаётся один.
   // allValues — все значения фильтра (нужны, чтобы понять, что выбрано «всё»)
@@ -412,6 +583,20 @@ function init() {
       renderStations(true);
       if (!keepSelectionVisible()) updateBusiness();   // при смене поста выводы обновит selectStation
     });
+  });
+
+  // Кнопки моделей над графиками: перерисовываем график, «Ближайший риск» и бизнес-выводы по выбранной модели
+  document.getElementById('forecast-models').addEventListener('click', (event) => {
+    const button = event.target.closest('.u-chip');
+    if (button) selectModel('forecast', button.dataset.value);
+  });
+  document.getElementById('backtest-models').addEventListener('click', (event) => {
+    const button = event.target.closest('.u-chip');
+    if (button) selectModel('backtest', button.dataset.value);
+  });
+  document.getElementById('seasonal-models').addEventListener('click', (event) => {
+    const button = event.target.closest('.u-chip');
+    if (button) selectModel('seasonal', button.dataset.value);
   });
 
   initBusiness();
