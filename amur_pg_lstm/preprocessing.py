@@ -45,14 +45,17 @@ SPIKE_T = {
     'upstream': {1: 60, 2: 60, 3: 80, 4: 250, 5: 200, 6: 150, 7: 150, 8: 150, 9: 150, 10: 150, 11: 150, 12: 100},
 }
 EXPERT_BAD = {'khabarovsk': [('2023-03-21', '2023-04-10')]}   # сбой датчика: от −987 до +662 см за сутки
+STUB_GAP_DAYS = 7   # «0» после пропуска хотя бы такой длины — заглушка поста, а не настоящий уровень
 
 
 def find_bad(levels, name):
     """Маска ошибочных значений ряда уровня, см (индекс — даты наблюдений)."""
     min_cm, max_cm = VALID_RANGE[name]
     spike_limit_cm = SPIKE_T['khabarovsk' if name == 'khabarovsk' else 'upstream']
-    bad = (levels < min_cm) | (levels > max_cm)                                # коды ошибок 1050/1056 и т. п.
-    bad |= (levels == 0) & (levels.index.to_series().diff().dt.days >= 7)     # «0» — заглушка после пропуска
+    out_of_range = (levels < min_cm) | (levels > max_cm)                       # коды ошибок 1050/1056 и т. п.
+    after_long_gap = levels.index.to_series().diff().dt.days >= STUB_GAP_DAYS
+    is_stub_zero = (levels == 0) & after_long_gap
+    bad = out_of_range | is_stub_zero
     for bad_from, bad_to in EXPERT_BAD.get(name, []):
         bad[bad_from:bad_to] = True
     for _ in range(50):                                                        # одиночные выбросы, по одному за шаг
@@ -180,18 +183,27 @@ def routing_terms(clean, routing, t_idx):
     t_idx = np.atleast_1d(np.asarray(t_idx))
     dpost = {p: np.nan_to_num(clean[f'level_{p}'].diff().values) for p in UPSTREAM}
     U, PHI = np.zeros((len(t_idx), HORIZON)), np.zeros((len(t_idx), HORIZON))
-    last = list(routing.values())[-1]
+    last_model = list(routing.values())[-1]
     for h in range(1, HORIZON + 1):
-        r = next((r for r in routing.values() if h <= r['hmax']), None)
-        PHI[:, h - 1] = (r or last)['phi']
-        if r is None:
+        model = _routing_model_for(routing, h)
+        if model is None:                      # горизонт дальше всех моделей: притока нет, волна только затухает
+            PHI[:, h - 1] = last_model['phi']
             continue
+        PHI[:, h - 1] = model['phi']
         k = 0
-        for p in r['posts']:
+        for p in model['posts']:
             for d in (0, 1):
-                U[:, h - 1] += r['a'][k] * dpost[p][t_idx + h - r['tau'][p] - d]
+                U[:, h - 1] += model['a'][k] * dpost[p][t_idx + h - model['tau'][p] - d]
                 k += 1
     return U, PHI
+
+
+def _routing_model_for(routing, h):
+    """Первая физическая модель, которая работает на горизонте h сут (h ≤ hmax); None — такой нет."""
+    for model in routing.values():
+        if h <= model['hmax']:
+            return model
+    return None
 
 
 def routing_forecast(clean, routing, t_idx):
