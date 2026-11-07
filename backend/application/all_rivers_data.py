@@ -1,7 +1,7 @@
 from datetime import date
 import csv
 
-import common.errors as errors
+from backend.common import errors
 
 river_data_paths : dict[str, str] = {
     "test_river": "tests/test_river_trimmed.csv",

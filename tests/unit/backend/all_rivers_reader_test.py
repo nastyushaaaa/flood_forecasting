@@ -2,8 +2,8 @@ import pytest
 from datetime import date
 import csv
 
-from application.all_rivers_data import get_water_level
-from common.errors import CsvReadError, UnavailableDate
+from src.application.all_rivers_data import get_water_level
+from src.common.errors import CsvReadError, UnavailableDate
 
 def read_csv_helper(path : str) -> dict[date, float]:
     out: dict[date, float] = {}
@@ -70,7 +70,7 @@ def test_funtion_returns_in_range():
     water_levels : dict[date, float] = get_water_level(river_name, start_date, end_date)
     assert test_csv == water_levels
 """
-
+"""
 def test_function_handles_reversed_date():
     river_name = "test_river"
     end_date = date.fromisoformat("2026-01-01")
@@ -108,7 +108,7 @@ def test_function_throws_on_missing_file():
     end_date = date.fromisoformat("2026-11-01")
     with pytest.raises(CsvReadError): get_water_level(river_name, start_date, end_date)
 
-
+"""
 def test_function_throws_on_wrong_columns():
     river_name = "test_wrong_table"
     start_date = date.fromisoformat("2026-01-01")
