@@ -1,0 +1,19 @@
+# общий список библиотек проекта; установка: pip install -r requirements.txt
+
+# данные и расчёты (все модели)
+numpy>=1.26
+pandas>=2.0
+scipy>=1.11
+matplotlib>=3.7
+
+# модели
+scikit-learn>=1.3 # линейная модель, градиентный бустинг
+prophet>=1.1 # Prophet
+torch>=2.0 # PG-LSTM
+
+# сбор данных и сервис
+requests>=2.31 # погода Open-Meteo
+playwright>=1.40 # парсер allrivers.info (после установки: playwright install chromium)
+fastapi>=0.110 # веб-сервис (main.py)
+uvicorn>=0.29 # запуск веб-сервиса
+python-dotenv>=1.0 # настройки из файла .env

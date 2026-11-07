@@ -1,4 +1,6 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
+from hourly_forecast import get_hourly_forecast, HourlyForecast
 
 from datetime import date, datetime
 from dotenv import load_dotenv
@@ -25,3 +27,7 @@ def get_water_levels(river_name: str, start_date: date, end_date: date) -> dict[
     if (start_date >= date.today()): raise errors.UnavailableDate(f"Starting date cant be in the future: {start_date}")
     if (end_date < start_date): raise errors.UnavailableDate(f"End date should be before starting date: {end_date} < {start_date}")
     return all_rivers_data.get_water_level(river_name, start_date, end_date)
+
+# Сайт (папка frontend) открывается по адресу http://127.0.0.1:8000/
+# Подключаем последним: эндпоинты API, объявленные выше, имеют приоритет.
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")

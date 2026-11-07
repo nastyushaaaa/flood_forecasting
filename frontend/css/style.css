@@ -1,0 +1,283 @@
+/* =====================================================================================
+   КОМПОНЕНТЫ И РАЗМЕТКА
+   Названия классов как в дизайн-проекте: u-card, u-kpi, u-badge, u-chip, u-btn, u-table …
+   Цвета/отступы — только через переменные из tokens.css.
+   ===================================================================================== */
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 14px/20px var(--font-text);
+}
+
+/* ---------- Типографика (шкала из дизайн-проекта) ---------- */
+.h1 { font-size: 28px; line-height: 34px; font-weight: 700; letter-spacing: -0.28px; margin: 0; }
+.h2 { font-size: 20px; line-height: 26px; font-weight: 600; margin: 0; }
+.h3 { font-size: 16px; line-height: 22px; font-weight: 600; margin: 0; }
+.body-strong { font-weight: 600; margin: 0; }
+.caption { font-size: 12px; line-height: 16px; margin: 0; }
+.overline {
+  font-size: 11px; line-height: 14px; font-weight: 600;
+  letter-spacing: 0.66px; text-transform: uppercase; margin: 0;
+}
+.num { font-family: var(--font-mono); font-size: 13px; font-weight: 500; }
+.muted { color: var(--ink-muted); }
+
+/* ---------- Общая сетка страницы: боковая панель + основная часть ---------- */
+.layout { display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
+
+.sidebar {
+  background: var(--surface-sunken);
+  border-right: 1px solid var(--border);
+  padding: 28px var(--space-5);
+  display: flex; flex-direction: column; gap: var(--space-5);
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;   /* панель не уезжает при прокрутке */
+}
+.logo { display: flex; gap: 10px; align-items: center; }
+
+.main {
+  padding: var(--space-6) 40px var(--space-7);
+  max-width: 1160px;
+  min-width: 0;                       /* чтобы широкая таблица не распирала сетку */
+  display: flex; flex-direction: column; gap: var(--space-6);
+}
+.page-header { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--space-4); flex-wrap: wrap; }
+.page-header .overline { margin-bottom: var(--space-2); }
+.page-header__actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+.stack { display: flex; flex-direction: column; gap: var(--space-3); }
+.stack:empty { display: none; }       /* нет тревог — нет пустого отступа */
+
+.grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-5); }
+
+/* ---------- Карточка ---------- */
+.u-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  min-width: 0;
+}
+.card-sub { margin: var(--space-1) 0 var(--space-4); }
+.card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-4); }
+.divider { border: 0; border-top: 1px solid var(--border); margin: var(--space-5) 0 var(--space-4); }
+
+/* ---------- KPI-карточки (крупное число) ---------- */
+.kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-4); }
+.kpi-row--3 { grid-template-columns: repeat(3, 1fr); margin-top: var(--space-4); }
+.u-kpi {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) 17px;
+  display: flex; flex-direction: column; gap: var(--space-2);
+}
+.u-kpi--alert { border: 2px solid var(--status-danger); padding: 15px 16px; }  /* рамка толще — паддинг меньше */
+.u-kpi__label { display: flex; align-items: center; gap: 6px; }
+.u-kpi__value {
+  font-family: var(--font-mono); font-size: 36px; line-height: 40px;
+  font-weight: 600; letter-spacing: -0.72px;
+}
+
+/* ---------- Значки статусов (форма + цвет, чтобы различать и без цвета) ---------- */
+.glyph { width: 12px; height: 12px; flex-shrink: 0; display: block; }
+.g-normal { fill: var(--status-normal); }
+.g-watch  { fill: var(--status-watch); stroke: var(--status-watch-ink); stroke-width: 1.25; stroke-linejoin: round; }
+.g-flood  { fill: var(--status-flood); }
+.g-danger { fill: var(--status-danger); }
+.g-nodata { fill: none; stroke: var(--status-nodata); stroke-width: 2; }
+
+/* ---------- Бейдж статуса ---------- */
+.u-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px var(--space-2); border-radius: var(--radius-sm);
+  font-size: 12px; line-height: 16px; font-weight: 600; white-space: nowrap;
+}
+.u-badge--normal { background: var(--status-normal-soft); color: var(--status-normal-ink); }
+.u-badge--watch  { background: var(--status-watch-soft);  color: var(--status-watch-ink); }
+.u-badge--flood  { background: var(--status-flood-soft);  color: var(--status-flood-ink); }
+.u-badge--danger { background: var(--status-danger-soft); color: var(--status-danger-ink); }
+.u-badge--nodata { background: var(--status-nodata-soft); color: var(--status-nodata-ink); }
+
+/* ---------- Поля фильтров, чипы, кнопки ---------- */
+.u-field { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); }
+.u-field legend { padding: 0; margin-bottom: var(--space-3); }
+
+.u-input {
+  height: 36px; width: 100%; padding: 0 var(--space-3);
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  font: inherit;
+  color-scheme: light dark;            /* календарь браузера в цвет темы */
+}
+
+.u-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.u-chips--column { flex-direction: column; align-items: flex-start; }
+.u-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 28px; padding: 0 var(--space-3);
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  font: 500 13px/1 var(--font-text); cursor: pointer;
+}
+/* выбранный чип: aria-pressed="true" (так состояние слышит и экранный диктор) */
+.u-chip[aria-pressed="true"] {
+  background: var(--brand-soft); border: 2px solid var(--brand);
+  padding: 0 11px; font-weight: 600;
+}
+
+.u-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  height: 36px; padding: 0 var(--space-4);
+  border-radius: var(--radius-md); border: 1px solid transparent;
+  font: 600 14px/1 var(--font-text); cursor: pointer; white-space: nowrap;
+  text-decoration: none;               /* кнопка-ссылка <a class="u-btn"> без подчёркивания */
+}
+.u-btn--primary { background: var(--action); color: var(--on-action); }
+.u-btn--primary:hover { background: var(--action-hover); }
+.u-btn--secondary { background: var(--surface); color: var(--ink); border-color: var(--border-strong); }
+.u-btn--secondary:hover { background: var(--surface-sunken); }
+.u-btn--sm { height: 28px; padding: 0 var(--space-3); font-size: 13px; }
+.u-btn--wide { width: 100%; }
+.u-btn:disabled { opacity: 0.6; cursor: wait; }
+
+/* видимая рамка фокуса для работы с клавиатуры */
+.u-btn:focus-visible, .u-chip:focus-visible, .u-input:focus-visible, .u-table tbody tr:focus-visible {
+  outline: 2px solid var(--focus); outline-offset: 2px;
+}
+
+/* ---------- Плашки-сообщения ---------- */
+.u-callout {
+  display: flex; align-items: center; gap: 10px;
+  padding: var(--space-3) var(--space-4); border-radius: var(--radius-md);
+  background: var(--brand-soft); color: var(--ink);
+}
+.u-callout[hidden] { display: none; }
+.u-callout svg { flex-shrink: 0; }
+.u-callout--danger { background: var(--status-danger-soft); color: var(--status-danger-ink); }
+#seasonal-note { margin-top: var(--space-4); }
+
+/* ---------- Карта ---------- */
+.map {
+  height: 308px; border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  z-index: 0;                          /* чтобы слои Leaflet не перекрывали остальную страницу */
+}
+.legend { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); margin-top: var(--space-3); }
+.legend > span { display: inline-flex; align-items: center; gap: 6px; }
+#forecast-card .legend, #seasonal-card .legend { margin: 0 0 var(--space-2); }
+
+.map-marker { background: none; border: none; cursor: pointer; }
+.map-marker .ring { fill: var(--surface); stroke: var(--ink); stroke-width: 1.5; }
+.map-marker.is-selected .ring { stroke: var(--focus); stroke-width: 3; }
+/* подпись поста рядом с маркером: без «облачка» Leaflet, с обводкой цветом фона для читаемости */
+.leaflet-tooltip.map-label {
+  background: none; border: 0; box-shadow: none; padding: 0;
+  color: var(--ink); font: 400 11px/14px var(--font-text);
+  text-shadow: 0 0 3px var(--surface), 0 0 3px var(--surface), 0 0 3px var(--surface);
+}
+.leaflet-tooltip.map-label::before { display: none; }
+.leaflet-container { font-family: var(--font-text); }
+.leaflet-control-attribution { font-size: 10px; }
+
+/* ---------- Распределение по статусам ---------- */
+.u-dist {
+  display: flex; gap: 2px; height: 12px;
+  border-radius: var(--radius-pill); overflow: hidden;
+  background: var(--surface-sunken);
+}
+.u-dist span { display: block; }       /* ширина сегмента задаётся в main.js через flex-grow */
+.u-dist .normal { background: var(--status-normal); }
+.u-dist .watch  { background: var(--status-watch); }
+.u-dist .flood  { background: var(--status-flood); }
+.u-dist .danger { background: var(--status-danger); }
+.u-dist .nodata { background: var(--status-nodata); }
+.dist-list { list-style: none; margin: var(--space-4) 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.dist-list li { display: flex; justify-content: space-between; align-items: center; }
+
+/* ---------- Таблица ---------- */
+.table-wrap { overflow-x: auto; }       /* на телефоне таблица прокручивается сама, а не страница */
+.u-table { width: 100%; border-collapse: collapse; min-width: 640px; }
+.u-table th {
+  text-align: left; padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border); color: var(--ink-muted);
+  font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: 0.66px; text-transform: uppercase;
+}
+.u-table td { padding: 10px var(--space-3); border-bottom: 1px solid var(--border); vertical-align: middle; }
+.u-table .num { text-align: right; }
+.u-table th.num { font-family: var(--font-text); }
+.u-table tbody tr { cursor: pointer; }
+.u-table tbody tr:hover { background: var(--bg); }
+.u-table tbody tr.is-selected { background: var(--brand-soft); }
+
+/* ---------- Графики ---------- */
+.chart { width: 100%; }
+.chart--forecast { height: 300px; }
+.chart--seasonal { height: 220px; }
+.chart-empty {
+  height: 100%; display: flex; align-items: center; justify-content: center; text-align: center;
+  padding: var(--space-5); border-radius: var(--radius-md);
+  background: var(--surface-sunken); color: var(--ink-muted);
+}
+
+/* ---------- Раскрывающиеся разделы (<details>) ---------- */
+.u-accordion { border-top: 1px solid var(--border); margin-top: var(--space-4); }
+.u-accordion details { border-bottom: 1px solid var(--border); }
+.u-accordion summary {
+  display: flex; align-items: baseline; gap: var(--space-3);
+  padding: var(--space-4) 0; cursor: pointer; list-style: none;
+}
+.u-accordion summary::-webkit-details-marker { display: none; }
+/* стрелка справа: вниз — закрыт, вверх — открыт */
+.u-accordion summary::after {
+  content: ''; margin-left: auto; align-self: center; flex-shrink: 0;
+  width: 8px; height: 8px;
+  border-right: 2px solid var(--ink-muted); border-bottom: 2px solid var(--ink-muted);
+  transform: rotate(45deg) translate(-2px, -2px);
+}
+.u-accordion details[open] > summary::after { transform: rotate(-135deg) translate(-2px, -2px); }
+.u-accordion summary:hover .body-strong { color: var(--link); }
+.u-accordion summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.u-accordion__body { padding: 0 0 var(--space-5); display: flex; flex-direction: column; gap: var(--space-3); }
+.u-accordion__body > p { margin: 0; }
+
+/* ---------- Бизнес-выводы ---------- */
+.biz-list { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: var(--space-2); }
+.biz-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); max-width: 640px; }
+.biz-form .u-field { gap: var(--space-2); }
+#loss-result { display: flex; flex-direction: column; gap: var(--space-3); }
+#loss-result .kpi-row--3 { margin-top: 0; }
+#loss-result p { margin: 0; }
+#business-card .u-kpi__value { font-size: 28px; line-height: 34px; }   /* суммы длиннее, чем уровни */
+
+/* ---------- Метка «демонстрационные данные» и подвал ---------- */
+.demo-badge { margin-top: var(--space-3); }
+.demo-badge[hidden] { display: none; }
+
+.page-footer {
+  display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: var(--space-5);
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-5);
+}
+.page-footer p { margin: var(--space-1) 0 0; }
+.page-footer .overline { margin-bottom: var(--space-1); }
+.page-footer a { color: var(--link); }
+
+/* ---------- Адаптивность ---------- */
+@media (max-width: 1200px) {
+  .kpi-row { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+  .grid-2 { grid-template-columns: 1fr; }
+  .page-footer { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--border); padding: var(--space-5) var(--space-4); }
+  .main { padding: var(--space-5) var(--space-4) var(--space-7); }
+  .kpi-row--3 { grid-template-columns: 1fr; }
+  .biz-form { grid-template-columns: 1fr; }
+  .u-accordion summary { flex-wrap: wrap; }
+  .page-footer { grid-template-columns: 1fr; }
+  .u-kpi__value { font-size: 30px; line-height: 34px; }
+}
