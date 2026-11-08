@@ -179,8 +179,13 @@ def main():
                 })
     res = pd.DataFrame(records)
 
-    # ---- σΔ по горизонтам (по train, чтобы не подсматривать в тест) ----
-    sigmas = sigma_delta_by_horizon(train[target], range(1, horizon + 1))
+    # сигма по горизонтам, берем только незаполненные данные
+    if f'{target}_filled' in train.columns:
+        real_train_target = train.loc[train[f'{target}_filled'] == 0, target] # осталвяем только реальные данные (0)
+    else:
+         real_train_target = train[target] # если колонки _filled нет, то полностью
+
+    sigmas = sigma_delta_by_horizon(real_train_target, range(1, horizon + 1))
     res['sigma_delta'] = res['horizon'].map(sigmas)
 
     # ---- Ошибки ----
