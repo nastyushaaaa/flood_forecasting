@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from predict import MODELS, load_data, make_model
+from predict import MODELS, CsvDataSource, make_model
 
 # читаем, что попросили в командной строке
 parser = argparse.ArgumentParser(description='Прогноз уровня воды на 1–14 суток')
@@ -22,7 +22,7 @@ args = parser.parse_args()
 keys = list(MODELS) if args.model == 'all' else args.model.split(',')
 
 # данные и дата прогноза
-df = load_data()
+df = CsvDataSource().load()
 date = pd.Timestamp(args.date) if args.date else df.index[-1]
 print(f'Прогноз от {date.date()}, уровень в этот день: {df.at[date, "level_khabarovsk"]:.0f} см')
 

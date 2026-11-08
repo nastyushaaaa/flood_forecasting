@@ -1,6 +1,6 @@
 """Прогнозы всех моделей для пар проверки (задача 2.3).
 
-Модели берутся из `predict.py`: у каждой одинаковый вид `model.predict(date, h)`.
+Список моделей передают снаружи; модуль работает только с абстракцией `predict.Model`.
 """
 import logging
 import time
@@ -9,25 +9,25 @@ import numpy as np
 import pandas as pd
 
 from model_comparison import config
-from predict import MODELS, make_model
+from predict import Model
 
 logger = logging.getLogger(__name__)
 
 
-def predict_all(df: pd.DataFrame, pairs: pd.DataFrame) -> dict[str, np.ndarray]:
+def predict_all(df: pd.DataFrame, pairs: pd.DataFrame, models: list[Model]) -> dict[str, np.ndarray]:
     """Обучает каждую модель до `config.TRAIN_END` и получает её прогнозы для всех пар.
 
     Args:
         df: общая таблица данных; индекс — даты.
         pairs: пары из `pairs.make_pairs` (колонки issue_date и horizon).
+        models: модели для сравнения; любые наследники `predict.Model`.
 
     Returns:
         Словарь {название модели: прогнозы уровня, см, в порядке строк `pairs`}.
         Модель, которая упала с ошибкой, пропускается, остальные считаются дальше.
     """
     result = {}
-    for key in MODELS:
-        model = make_model(key)
+    for model in models:
         started = time.time()
         logger.info('%s: обучение до %s', model.name, config.TRAIN_END)
         try:

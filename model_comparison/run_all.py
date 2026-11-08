@@ -19,7 +19,7 @@ from model_comparison.metrics import score_table, sigma_delta
 from model_comparison.models import predict_all
 from model_comparison.pairs import make_pairs
 from model_comparison.phases import phase_of
-from predict import TARGET, load_data
+from predict import MODELS, TARGET, CsvDataSource, DataSource, Model, make_model
 
 logger = logging.getLogger(__name__)
 
@@ -34,10 +34,10 @@ MAIN_COLORS = {
 TREND_COLOR = '#bbbbbb'
 
 
-def _collect_predictions(df: pd.DataFrame, pairs: pd.DataFrame) -> pd.DataFrame:
+def _collect_predictions(df: pd.DataFrame, pairs: pd.DataFrame, models: list[Model]) -> pd.DataFrame:
     """Одна длинная таблица: каждая пара для каждой модели, с ошибкой и фазой."""
     tables = []
-    for name, values in predict_all(df, pairs).items():
+    for name, values in predict_all(df, pairs, models).items():
         part = pairs.copy()
         part.insert(0, 'model', name)
         part['pred'] = values
@@ -75,18 +75,18 @@ def best_models(metrics: pd.DataFrame, by_phase: pd.DataFrame) -> pd.DataFrame:
     return best.sort_values(['phase', 'horizon']).reset_index(drop=True)
 
 
-def main() -> None:
+def main(data_source: DataSource, models: list[Model]) -> None:
     """Считает прогнозы всех моделей и сохраняет таблицы и график в `config.RESULTS_DIR`."""
     out = config.RESULTS_DIR
     out.mkdir(parents=True, exist_ok=True)
 
     # 2.2: данные и общие пары для всех моделей
-    df = load_data()
+    df = data_source.load()
     pairs = make_pairs(df)
     logger.info('Период проверки %s … %s, пар: %d', config.TEST_START, config.TEST_END, len(pairs))
 
     # 2.3 и 2.5: прогнозы всех моделей с фазой для каждого дня
-    predictions = _collect_predictions(df, pairs)
+    predictions = _collect_predictions(df, pairs, models)
     predictions.to_csv(out / 'predictions.csv', index=False, encoding='utf-8-sig')
 
     # σΔ по обучающему периоду, чтобы не подглядывать в проверку
@@ -123,4 +123,5 @@ if __name__ == '__main__':
     # PerformanceWarning из кода линейной модели не влияет на результат
     warnings.filterwarnings('ignore', category=pd.errors.PerformanceWarning)
     logging.getLogger('cmdstanpy').setLevel(logging.WARNING)
-    main()
+    # точка сборки: только здесь выбираются конкретный источник данных и конкретные модели
+    main(data_source=CsvDataSource(), models=[make_model(key) for key in MODELS])
