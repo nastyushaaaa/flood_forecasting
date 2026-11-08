@@ -1,10 +1,12 @@
 import numpy as np
 import pandas as pd
-from sklearn.impute import SimpleImputer # медиана вместо пропуска
+import logging
 from sklearn.linear_model import Ridge # линейная регрессия (без переобучения)
 from sklearn.pipeline import Pipeline # конвейер - объединение шагов
 from sklearn.preprocessing import StandardScaler # нормализация
 
+
+logger = logging.getLogger(__name__)
 
 class LinearFloodModel:
     """Линейная baseline-модель (Ridge) на 14 суток."""
@@ -71,7 +73,6 @@ class LinearFloodModel:
                 raise ValueError(f'Мало данных для горизонта {h}: {len(X_tr)}')
                 
             pipe = Pipeline([
-                ('imputer', SimpleImputer(strategy='median')),
                 ('scaler', StandardScaler()),
                 ('ridge', Ridge(alpha=self.alpha)),
             ])
@@ -94,8 +95,10 @@ class LinearFloodModel:
         t = len(df) - 1 if date is None else df.index.get_loc(pd.Timestamp(date)) # индекс сегодня/последего дня
         x_t = X.iloc[[t]].reindex(columns=self.feature_cols)
         
-        if x_t.isna().all(axis=1).any():
-            raise ValueError('Недостаточно истории для признаков на эту дату')
+        if x_t.isna().any(axis=1).any():
+            missing_cols = x_t.columns[x_t.isna().any()].tolist()
+            logger.error(f'Недостаточно данных для прогноза на {df.index[t]}. Отсутствуют признаки: {missing_cols}')
+            raise ValueError(f'Недостаточно истории для признаков на эту дату. Не хватает: {missing_cols}')
 
         # прогон по 14-ти моделям
         d = np.array([m.predict(x_t)[0] for m in self.models]) # дельта
