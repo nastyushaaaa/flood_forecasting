@@ -15,6 +15,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from abc import ABC, abstractmethod
+
 ROOT = Path(__file__).resolve().parent # корень репозитория
 DATA_FILE = ROOT / 'data' / 'amur_khabarovsk_clean_2002-2026.csv' # единственный файл данных
 TARGET = 'level_khabarovsk' # что прогнозируем
@@ -26,15 +28,36 @@ for folder in [ROOT, ROOT / 'amur_pg_lstm']:
         sys.path.insert(0, str(folder))
 
 
+class DataSource(ABC):
+    @abstractmethod
+    def load(self) -> pd.DataFrame:
+        """Возвращает таблицу данных."""
+
+
+class CsvDataSource(DataSource):
+    def __init__(self, path: Path = DATA_FILE):
+        self.path = path
+
+    def load(self) -> pd.DataFrame:
+        return pd.read_csv(self.path, parse_dates=['date']).set_index('date').sort_index()
+
+
 def load_data():
-    # читает общий файл данных; индекс таблицы - дата
-    return pd.read_csv(DATA_FILE, parse_dates=['date']).set_index('date').sort_index()
+    return CsvDataSource().load()
 
 
 # шаблон
-class Model:
-    # шаблон: каждая модель заполняет _fit (обучение) и _forecast_from (14 прогнозов от даты)
+class Model(ABC):
+    # шаблон: каждая модель обязана заполнить _fit (обучение) и _forecast_from (14 прогнозов от даты)
     name = 'модель'
+
+    @abstractmethod
+    def _fit(self, train):
+        """Обучение на таблице train."""
+
+    @abstractmethod
+    def _forecast_from(self, date):
+        """Список из 14 прогнозов уровня (см) от даты date."""
 
     def fit(self, df, train_end=None):
         # обучение на данных до train_end включительно
