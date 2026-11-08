@@ -4,6 +4,8 @@ import logging
 from sklearn.linear_model import Ridge # линейная регрессия (без переобучения)
 from sklearn.pipeline import Pipeline # конвейер - объединение шагов
 from sklearn.preprocessing import StandardScaler # нормализация
+from sklearn.model_selection import TimeSeriesSplit
+from sklearn.base import clone
 
 
 logger = logging.getLogger(__name__)
@@ -77,8 +79,19 @@ class LinearFloodModel:
                 ('ridge', Ridge(alpha=self.alpha)),
             ])
             pipe.fit(X_tr, y_tr) # запуск обучения
+            tscv = TimeSeriesSplit(n_splits=4, gap=self.lags + self.horizon) # разбиваем на 4 части, gap = 14 + 14
+            residuals_h = []
+
+            for train_idx, val_idx in tscv.split(X_tr):
+                X_train_fold, X_val_fold = X_tr.iloc[train_idx], X_tr.iloc[val_idx]
+                y_train_fold, y_val_fold = y_tr.iloc[train_idx], y_tr.iloc[val_idx]
+
+                fold_pipe = clone(pipe)
+                fold_pipe.fit(X_train_fold, y_train_fold)
+                residuals_h.extend(y_val_fold - fold_pipe.predict(X_val_fold)) # разница между фактом и прогнозом
+
             self.models.append(pipe)
-            residuals.append(y_tr - pipe.predict(X_tr)) # считаем ошибку модели
+            residuals.append(np.array(residuals_h))
 
         # работа с ошибками
         self.err_q10 = np.array([np.percentile(r, 10) for r in residuals])
