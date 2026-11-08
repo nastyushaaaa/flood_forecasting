@@ -1,14 +1,18 @@
 """Five trends with additive calendar-month effects of zero annual sum."""
 from dataclasses import dataclass
 import numpy as np
-from scipy.optimize import minimize_scalar
-from common import design, evaluate, jacobian
-
+from common import ModelFitError, evaluate, get_trend, jacobian, search_b
 
 def month_contrasts(month):
     month = np.asarray(month, dtype=int)
     return np.column_stack([(month == m).astype(float)-(month == 1) for m in range(2, 13)])
 
+def check_month(month):
+    month = np.asarray(month, dtype=int)
+    wrong = (month < 1) | (month > 12)
+    if np.any(wrong):
+        raise ValueError(f'month должен быть от 1 до 12, получено: {np.unique(month[wrong])}')
+    return month
 
 @dataclass
 class SeasonalFit:
@@ -22,20 +26,24 @@ class SeasonalFit:
     r_squared: float
 
     def predict(self, u, x, month):
+        month = check_month(month)
         return evaluate(self.kind, self.coefficients, u, x)+self.month_effects[np.asarray(month, dtype=int)-1]
 
 
 def fit_monthly(kind, u, x, month, y):
+    trend = get_trend(kind)
     u, x, y = [np.asarray(v, dtype=float) for v in (u, x, y)]
-    month = np.asarray(month, dtype=int)
+    month = check_month(month)
+    if np.any(x <= 0):
+        raise ValueError(f'x должен быть > 0, минимальное значение: {x.min()}')
     d = month_contrasts(month)
-    if kind in ('polynomial2', 'polynomial3', 'logarithmic'):
-        matrix = np.column_stack([design(kind, u, x), d])
+    if trend.linear:
+        matrix = np.column_stack([trend.design(u, x), d])
         parameters = np.linalg.lstsq(matrix, y, rcond=None)[0]
         nbase = matrix.shape[1]-11
         coefficients, gamma = parameters[:nbase], parameters[nbase:]
     else:
-        z = np.log(x) if kind == 'power' else x
+        z = np.log(x) if trend.use_log else x
         inv_dd = np.linalg.inv(d.T@d)
         dy = d.T@y
         y_projected_sq = float(y@y-dy@inv_dd@dy)
@@ -55,18 +63,7 @@ def fit_monthly(kind, u, x, month, y):
                 return np.array([a_scaled*np.exp(-offset), b]), inv_dd@(dy-a_scaled*dp)
             return y_projected_sq-numerator*numerator/denominator
 
-        grid = np.linspace(-10, 10, 401)
-        losses = np.array([profile(b) for b in grid])
-        candidates = []
-        for i in range(1, len(grid)-1):
-            if losses[i] <= losses[i-1] and losses[i] <= losses[i+1]:
-                result = minimize_scalar(profile, bounds=(grid[i-1],grid[i+1]), method='bounded', options={'xatol':1e-12})
-                candidates.append((result.fun,result.x))
-        if not candidates:
-            raise RuntimeError('No interior nonlinear monthly minimum')
-        loss, b = min(candidates)
-        if abs(b)>9.99 or loss>=min(losses[0],losses[-1]):
-            raise RuntimeError('Nonlinear monthly search reached boundary')
+        b = search_b(profile)
         coefficients,gamma=profile(b,parameters=True)
         nbase=2
     effects=np.r_[-gamma.sum(),gamma]
@@ -75,7 +72,7 @@ def fit_monthly(kind, u, x, month, y):
     j=np.column_stack([jacobian(kind,coefficients,u,x),d])
     p=j.shape[1]
     if np.linalg.matrix_rank(j)!=p:
-        raise RuntimeError('Monthly model is not identified')
+        raise ModelFitError(f'Сезонная модель {kind!r} не идентифицируема: матрица вырождена')
     s=float(np.sqrt(residual@residual/(len(y)-p)))
     covariance_reduced=s*s*np.linalg.inv(j.T@j)
     transform=np.zeros((nbase+12,p));transform[:nbase,:nbase]=np.eye(nbase)
