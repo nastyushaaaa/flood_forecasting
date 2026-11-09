@@ -3,54 +3,71 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.optimize import minimize_scalar, least_squares
 
+class BaseModel:
+    def design(self, u, x): raise NotImplementedError
+    def evaluate(self, coefficients, u, x): raise NotImplementedError
+    def jacobian(self, coefficients, u, x): raise NotImplementedError
 
-@dataclass
+class PolynomialModel(BaseModel):
+    def __init__(self, degree):
+        self.degree = degree
+    def design(self, u, x):
+        return np.column_stack([np.asarray(u) ** k for k in range(self.degree + 1)])
+    def evaluate(self, coefficients, u, x):
+        return self.design(u, x) @ coefficients
+    def jacobian(self, coefficients, u, x):
+        return self.design(u, x)
+
+class LogarithmicModel(BaseModel):
+    def design(self, u, x):
+        return np.column_stack([np.ones_like(x), np.log(x)])
+    def evaluate(self, coefficients, u, x):
+        return self.design(u, x) @ coefficients
+    def jacobian(self, coefficients, u, x):
+        return self.design(u, x)
+
+class PowerModel(BaseModel):
+    def evaluate(self, coefficients, u, x):
+        a, b = coefficients
+        return a * np.power(x, b)
+    def jacobian(self, coefficients, u, x):
+        a, b = coefficients
+        z = np.log(x)
+        phi = np.exp(b * z)
+        return np.column_stack([phi, a * phi * z])
+
+class ExponentialModel(BaseModel):
+    def evaluate(self, coefficients, u, x):
+        a, b = coefficients
+        return a * np.exp(b * x)
+    def jacobian(self, coefficients, u, x):
+        a, b = coefficients
+        phi = np.exp(b * x)
+        return np.column_stack([phi, a * phi * x])
+
+def get_model(kind):
+    if kind == 'polynomial2': return PolynomialModel(2)
+    if kind == 'polynomial3': return PolynomialModel(3)
+    if kind == 'logarithmic': return LogarithmicModel()
+    if kind == 'power': return PowerModel()
+    if kind == 'exponential': return ExponentialModel()
+    raise ValueError(f"Unknown model kind: {kind}")
+
+@dataclass(frozen=True)
 class Fit:
-    kind: str
+    model: BaseModel
     coefficients: np.ndarray
     n: int
     s: float
     inverse_information: np.ndarray
 
-    def predict(self, u, x):
-        return evaluate(self.kind, self.coefficients, u, x)
-
     def forecast(self, u, x):
-        prediction = self.predict(u, x)
-        g = jacobian(self.kind, self.coefficients, u, x)
+        prediction = self.model.evaluate(self.coefficients, u, x)
+        g = self.jacobian(self.coefficients, u, x)
         leverage = np.einsum('ij,jk,ik->i', g, self.inverse_information, g)
         se_mean = self.s * np.sqrt(np.maximum(leverage, 0))
         se_prediction = self.s * np.sqrt(1 + np.maximum(leverage, 0))
         return prediction, se_prediction, se_mean
-
-
-def design(kind, u, x):
-    if kind in ('polynomial2', 'polynomial3'):
-        degree = 2 if kind == 'polynomial2' else 3
-        return np.column_stack([np.asarray(u) ** k for k in range(degree + 1)])
-    if kind == 'logarithmic':
-        return np.column_stack([np.ones_like(x), np.log(x)])
-    raise ValueError(kind)
-
-
-def evaluate(kind, coefficients, u, x):
-    if kind in ('polynomial2', 'polynomial3', 'logarithmic'):
-        return design(kind, u, x) @ coefficients
-    a, b = coefficients
-    if kind == 'power':
-        return a * np.power(x, b)
-    if kind == 'exponential':
-        return a * np.exp(b * x)
-    raise ValueError(kind)
-
-
-def jacobian(kind, coefficients, u, x):
-    if kind in ('polynomial2', 'polynomial3', 'logarithmic'):
-        return design(kind, u, x)
-    a, b = coefficients
-    z = np.log(x) if kind == 'power' else x
-    phi = np.exp(b * z)
-    return np.column_stack([phi, a * phi * z])
 
 
 def fit_model(kind, u, x, y):
@@ -58,8 +75,9 @@ def fit_model(kind, u, x, y):
     u, x, y = (np.asarray(v, dtype=float) for v in (u, x, y))
     if np.any(x <= 0) or not np.all(np.isfinite(y)):
         raise ValueError('x must be positive and y finite')
+    model = get_model(kind)
     if kind in ('polynomial2', 'polynomial3', 'logarithmic'):
-        coefficients = np.linalg.lstsq(design(kind, u, x), y, rcond=None)[0]
+        coefficients = np.linalg.lstsq(model.design(u, x), y, rcond=None)[0]
     else:
         z = np.log(x) if kind == 'power' else x
 
@@ -87,17 +105,27 @@ def fit_model(kind, u, x, y):
             raise RuntimeError('Expand nonlinear search bounds before using this fit')
         coefficients = np.array([profile(b, return_a=True), b])
         refined = least_squares(
-            lambda c: evaluate(kind, c, u, x) - y, coefficients,
-            jac=lambda c: jacobian(kind, c, u, x),
+            lambda c: model.evaluate(c, u, x) - y, coefficients,
+            jac=lambda c: model.jacobian(c, u, x),
             bounds=([-np.inf, -10], [np.inf, 10]), x_scale='jac',
             ftol=1e-12, xtol=1e-12, gtol=1e-10, max_nfev=5000,
         )
         if refined.success and np.sum(refined.fun ** 2) <= profile(b) * (1 + 1e-12):
             coefficients = refined.x
-    g = jacobian(kind, coefficients, u, x)
+    g = model.jacobian(coefficients, u, x)
     if np.linalg.matrix_rank(g) != len(coefficients):
         raise RuntimeError('Rank-deficient parameter information matrix')
     inverse = np.linalg.inv(g.T @ g)
-    residual = y - evaluate(kind, coefficients, u, x)
+    residual = y - model.evaluate(coefficients, u, x)
     s = float(np.sqrt((residual @ residual) / (len(y) - len(coefficients))))
-    return Fit(kind, coefficients, len(y), s, inverse)
+    return Fit(model, coefficients, len(y), s, inverse)
+
+# функции для обратной совместимости со старыми скриптами
+def evaluate(kind, coefficients, u, x):
+    return get_model(kind).evaluate(coefficients, u, x)
+
+def jacobian(kind, coefficients, u, x):
+    return get_model(kind).jacobian(coefficients, u, x)
+
+def design(kind, u, x):
+    return get_model(kind).design(u, x)
