@@ -1,8 +1,11 @@
 import sys
+import logging
 from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+
+logger = logging.getLogger(__name__)
 
 # Чтобы скрипт видел папку linear_model, даже если запускается из корня
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -12,15 +15,13 @@ from linear_model.model import LinearFloodModel
 
 # ---------- вспомогательные функции ----------
 
-def sigma_delta_by_horizon(series: pd.Series, horizons) -> dict:
-    """
-    σΔ — СКО фактического приращения уровня за время прогноза h.
-    Считается по историческим (train) данным: Δ_h(t) = level(t+h) - level(t).
-    Возвращает {h: sigma}.
-    """
+def sigma_delta_by_horizon(series, horizons, is_filled=None):
     out = {}
     for h in horizons:
         deltas = series.shift(-h) - series
+        if is_filled is not None:
+            valid = (is_filled == 0) & (is_filled.shift(-h) == 0) & deltas.notna()
+            deltas = deltas[valid]
         out[h] = float(deltas.std(ddof=1))
     return out
 
@@ -167,20 +168,34 @@ def main():
 
     # Собираем прогнозы для тестовой выборки
     records = []
+    skipped_dates = 0
+    total_dates = 0
+
     for date in test.index[:-horizon]:
-        fc = model.forecast(df, date=date, X=X_all)
-        for _, row in fc.iterrows():
-            if row['date'] in test.index:
-                records.append({
-                    'date': row['date'],
-                    'horizon': int(row['horizon']),
-                    'pred': float(row['level']),
-                    'actual': float(test.loc[row['date'], target]),
-                })
+        total_dates += 1
+        try:
+            fc = model.forecast(df, date=date, X=X_all)
+            for _, row in fc.iterrows():
+                if row['date'] in test.index:
+                    records.append({
+                        'date': row['date'],
+                        'horizon': int(row['horizon']),
+                        'pred': float(row['level']),
+                        'actual': float(test.loc[row['date'], target]),
+                    })
+        except ValueError as e:
+            skipped_dates += 1
+            logger.warning(f"Пропущена дата {date.date()} при оценке: {e}")
+            continue
+
+    logger.info(f"Оценено {total_dates - skipped_dates} из {total_dates} дат, пропущено {skipped_dates}")
     res = pd.DataFrame(records)
 
-    # ---- σΔ по горизонтам (по train, чтобы не подсматривать в тест) ----
-    sigmas = sigma_delta_by_horizon(train[target], range(1, horizon + 1))
+    # вызов
+    sigmas = sigma_delta_by_horizon(
+        train[target], range(1, horizon + 1),
+        is_filled=train[f'{target}_filled'] if f'{target}_filled' in train.columns else None,
+    )
     res['sigma_delta'] = res['horizon'].map(sigmas)
 
     # ---- Ошибки ----

@@ -1,10 +1,14 @@
 import numpy as np
 import pandas as pd
-from sklearn.impute import SimpleImputer # медиана вместо пропуска
+import logging
 from sklearn.linear_model import Ridge # линейная регрессия (без переобучения)
 from sklearn.pipeline import Pipeline # конвейер - объединение шагов
 from sklearn.preprocessing import StandardScaler # нормализация
+from sklearn.model_selection import TimeSeriesSplit
+from sklearn.base import clone
 
+
+logger = logging.getLogger(__name__)
 
 class LinearFloodModel:
     """Линейная baseline-модель (Ridge) на 14 суток."""
@@ -71,13 +75,23 @@ class LinearFloodModel:
                 raise ValueError(f'Мало данных для горизонта {h}: {len(X_tr)}')
                 
             pipe = Pipeline([
-                ('imputer', SimpleImputer(strategy='median')),
                 ('scaler', StandardScaler()),
                 ('ridge', Ridge(alpha=self.alpha)),
             ])
             pipe.fit(X_tr, y_tr) # запуск обучения
+            tscv = TimeSeriesSplit(n_splits=4, gap=self.lags + self.horizon) # разбиваем на 4 части, gap = 14 + 14
+            residuals_h = []
+
+            for train_idx, val_idx in tscv.split(X_tr):
+                X_train_fold, X_val_fold = X_tr.iloc[train_idx], X_tr.iloc[val_idx]
+                y_train_fold, y_val_fold = y_tr.iloc[train_idx], y_tr.iloc[val_idx]
+
+                fold_pipe = clone(pipe)
+                fold_pipe.fit(X_train_fold, y_train_fold)
+                residuals_h.extend(y_val_fold - fold_pipe.predict(X_val_fold)) # разница между фактом и прогнозом
+
             self.models.append(pipe)
-            residuals.append(y_tr - pipe.predict(X_tr)) # считаем ошибку модели
+            residuals.append(np.array(residuals_h))
 
         # работа с ошибками
         self.err_q10 = np.array([np.percentile(r, 10) for r in residuals])
@@ -94,8 +108,10 @@ class LinearFloodModel:
         t = len(df) - 1 if date is None else df.index.get_loc(pd.Timestamp(date)) # индекс сегодня/последего дня
         x_t = X.iloc[[t]].reindex(columns=self.feature_cols)
         
-        if x_t.isna().all(axis=1).any():
-            raise ValueError('Недостаточно истории для признаков на эту дату')
+        if x_t.isna().any(axis=1).any():
+            missing_cols = x_t.columns[x_t.isna().any()].tolist()
+            logger.error(f'Недостаточно данных для прогноза на {df.index[t]}. Отсутствуют признаки: {missing_cols}')
+            raise ValueError(f'Недостаточно истории для признаков на эту дату. Не хватает: {missing_cols}')
 
         # прогон по 14-ти моделям
         d = np.array([m.predict(x_t)[0] for m in self.models]) # дельта
