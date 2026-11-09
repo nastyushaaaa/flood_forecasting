@@ -77,7 +77,7 @@ def assess(input_path,output,original_book=None):
             return dict(coefficients=f.coefficients,month_effects=f.month_effects,covariance=f.covariance,
                         s=f.s,n=f.n,p=f.p,r2=f.r_squared)
         f=fit_model(kind,u,x,y)
-        residual=y-f.predict(u,x)
+        residual = y - f.model.evaluate(f.coefficients, u, x)
         return dict(coefficients=f.coefficients,month_effects=np.zeros(12),covariance=f.s**2*f.inverse_information,
                     s=f.s,n=f.n,p=len(f.coefficients),r2=float(1-residual@residual/np.sum((y-y.mean())**2)))
 

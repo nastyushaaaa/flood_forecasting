@@ -61,11 +61,8 @@ class Fit:
     s: float
     inverse_information: np.ndarray
 
-    def predict(self, u, x):
-        return self.model.evaluate(self.coefficients, u, x)
-
     def forecast(self, u, x):
-        prediction = self.predict(u, x)
+        prediction = self.model.evaluate(self.coefficients, u, x)
         g = self.jacobian(self.coefficients, u, x)
         leverage = np.einsum('ij,jk,ik->i', g, self.inverse_information, g)
         se_mean = self.s * np.sqrt(np.maximum(leverage, 0))
