@@ -14,40 +14,6 @@ logger = logging.getLogger(__name__)
 class _PageNotFound(Exception):
     """Internal marker: page returned 4xx/5xx (wrong river/city slug)."""
 
-
-def _fetch_chart_response(url: str, timeout_ms: int, chart_timeout_ms: int) -> dict:
-    """Single fetch attempt.
-
-    Raises:
-        _PageNotFound: response is None or status >= 400.
-        PlaywrightError: navigation/timeout/browser error.
-        json.JSONDecodeError: response body is not valid JSON.
-    """
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        context = browser.new_context(
-            user_agent=(
-                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-                "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
-            ),
-            locale="ru-RU",
-        )
-        page = context.new_page()
-        try:
-            with page.expect_response(
-                lambda r: "/chart" in r.url
-                and r.request.resource_type in ("xhr", "fetch"),
-                timeout=chart_timeout_ms,
-            ) as response_info:
-                response = page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
-                if response is None or response.status >= 400:
-                    raise _PageNotFound(url)
-            return response_info.value.json()
-        finally:
-            context.close()
-            browser.close()
-
-
 def get_chart_data(
     url: str,
     timeout_ms: int = 60_000,
@@ -55,36 +21,69 @@ def get_chart_data(
     max_retries: int = 3,
     base_delay: float = 2.0,
 ) -> dict | None:
-    """Fetch chart JSON with exponential-backoff retries.
-
-    Returns None if all retries are exhausted or the payload is not JSON.
-    Re-raises _PageNotFound on 4xx/5xx so the caller can distinguish
-    a missing station from a transient failure.
-    """
-    for attempt in range(max_retries):
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
         try:
-            return _fetch_chart_response(url, timeout_ms, chart_timeout_ms)
-        except _PageNotFound:
-            logger.warning("Page not found (4xx/5xx): %s", url)
-            raise
-        except PlaywrightError as exc:
-            if attempt == max_retries - 1:
-                logger.error(
-                    "Playwright error after %d attempts for %s: %s",
-                    max_retries, url, exc,
-                )
-                return None
-            delay = base_delay * (2 ** attempt)
-            logger.info(
-                "Playwright error, retry %d/%d in %.1fs for %s: %s",
-                attempt + 1, max_retries, delay, url, exc,
-            )
-            time.sleep(delay)
-        except json.JSONDecodeError as exc:
-            logger.error("Invalid JSON from %s: %s", url, exc)
-            return None
+            for attempt in range(max_retries):
+                # If the browser itself crashed (Target closed / Browser closed),
+                # reusing it would make retries fail instantly. Relaunch.
+                if not browser.is_connected():
+                    logger.warning("Browser disconnected, relaunching for %s", url)
+                    browser = p.chromium.launch(headless=True)
+
+                try:
+                    return _fetch_chart_response(browser, url, timeout_ms, chart_timeout_ms)
+                except _PageNotFound:
+                    logger.warning("Page not found (4xx/5xx): %s", url)
+                    raise
+                except PlaywrightError as exc:
+                    if attempt == max_retries - 1:
+                        logger.error(
+                            "Playwright error after %d attempts for %s: %s",
+                            max_retries, url, exc,
+                        )
+                        return None
+                    delay = base_delay * (2 ** attempt)
+                    logger.info(
+                        "Playwright error, retry %d/%d in %.1fs for %s: %s",
+                        attempt + 1, max_retries, delay, url, exc,
+                    )
+                    time.sleep(delay)
+                except json.JSONDecodeError as exc:
+                    logger.error("Invalid JSON from %s: %s", url, exc)
+                    return None
+        finally:
+            browser.close()
     return None
 
+
+def _fetch_chart_response(
+    browser,
+    url: str,
+    timeout_ms: int,
+    chart_timeout_ms: int,
+) -> dict:
+    """One attempt: fresh context+page on a reused browser."""
+    context = browser.new_context(
+        user_agent=(
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+        ),
+        locale="ru-RU",
+    )
+    try:
+        page = context.new_page()
+        with page.expect_response(
+            lambda r: "/chart" in r.url
+            and r.request.resource_type in ("xhr", "fetch"),
+            timeout=chart_timeout_ms,
+        ) as response_info:
+            response = page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
+            if response is None or response.status >= 400:
+                raise _PageNotFound(url)
+        return response_info.value.json()
+    finally:
+        context.close()
 
 def _to_number(v: Any) -> float | int | None:
     """Coerce a JSON value to int/float, or None if it isn't numeric."""
