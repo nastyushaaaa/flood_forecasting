@@ -53,7 +53,7 @@ def get_model(kind):
     if kind == 'exponential': return ExponentialModel()
     raise ValueError(f"Unknown model kind: {kind}")
 
-@dataclass
+@dataclass(frozen=True)
 class Fit:
     model: BaseModel
     coefficients: np.ndarray
