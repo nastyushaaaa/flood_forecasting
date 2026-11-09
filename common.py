@@ -23,11 +23,14 @@ class Fit:
         se_prediction = self.s * np.sqrt(1 + np.maximum(leverage, 0))
         return prediction, se_prediction, se_mean
 
+def _build_polynomial_design(u, degree):
+    return np.column_stack([np.asarray(u) ** k for k in range(degree + 1)])
 
 def design(kind, u, x):
-    if kind in ('polynomial2', 'polynomial3'):
-        degree = 2 if kind == 'polynomial2' else 3
-        return np.column_stack([np.asarray(u) ** k for k in range(degree + 1)])
+    if kind == 'polynomial2':
+        return _build_polynomial_design(u, 2)
+    if kind == 'polynomial3':
+        return _build_polynomial_design(u, 3)
     if kind == 'logarithmic':
         return np.column_stack([np.ones_like(x), np.log(x)])
     raise ValueError(kind)
